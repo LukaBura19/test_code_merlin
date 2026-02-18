@@ -54,7 +54,6 @@
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
-    <!-- Also implements system-level theme detection (prefers-color-scheme) -->
     <script>
         (function() {
             try {
@@ -74,12 +73,22 @@
 
     <h1>Dobrodošli na Code Merlin aplikaciju</h1>
     
-    <button id="themeToggle" aria-label="Prebaci između svetle i tamne teme">
+    <button id="themeToggle">
         Promeni boju pozadine
     </button>
 
     <script>
         const button = document.getElementById('themeToggle');
+        
+        // Function to update aria-label based on current theme
+        const updateAriaLabel = (theme) => {
+            const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+            button.setAttribute('aria-label', label);
+        };
+
+        // Initial aria-label setup
+        const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateAriaLabel(initialTheme);
         
         button.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -90,6 +99,8 @@
             } else {
                 document.documentElement.removeAttribute('data-theme');
             }
+            
+            updateAriaLabel(newTheme);
             
             try {
                 localStorage.setItem('theme', newTheme);
