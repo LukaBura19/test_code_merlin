@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Merlin Aplikacija</title>
+    
     <style>
-        /* Koristimo CSS varijable za bolju održivost i lakšu promenu tema */
+        /* CSS Variables for better maintainability */
         :root {
             --bg-color: #ffffff;
             --text-color: #000000;
@@ -14,7 +15,7 @@
             --transition-speed: 0.3s;
         }
 
-        /* Dark mode stilovi definisani preko data-theme atributa */
+        /* Dark mode theme scoped to data-theme attribute */
         [data-theme="dark"] {
             --bg-color: #000000;
             --text-color: #ffffff;
@@ -50,17 +51,29 @@
             opacity: 0.8;
             transform: translateY(-1px);
         }
-
-        button:active {
-            transform: translateY(0);
-        }
     </style>
+
+    <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
+    <!-- Also implements system-level theme detection (prefers-color-scheme) -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {
+                console.error("Theme initialization failed", e);
+            }
+        })();
+    </script>
 </head>
 <body>
 
     <h1>Dobrodošli na Code Merlin aplikaciju</h1>
     
-    <!-- Dodat aria-label za bolju pristupačnost (A11y) -->
     <button id="themeToggle" aria-label="Prebaci između svetle i tamne teme">
         Promeni boju pozadine
     </button>
@@ -68,27 +81,21 @@
     <script>
         const button = document.getElementById('themeToggle');
         
-        // Funkcija za postavljanje teme
-        const setTheme = (theme) => {
-            if (theme === 'dark') {
+        button.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            
+            if (newTheme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
             } else {
                 document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'light');
             }
-        };
-
-        // Inicijalna provera sačuvane teme pri učitavanju stranice (Persistence)
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme);
-        }
-
-        button.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
+            
+            try {
+                localStorage.setItem('theme', newTheme);
+            } catch (e) {
+                console.warn("Could not save theme to localStorage", e);
+            }
         });
     </script>
 
