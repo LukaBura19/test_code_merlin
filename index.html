@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Merlin Aplikacija</title>
+    
+    <style>
+        /* CSS Variables for better maintainability */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --btn-bg: #f0f0f0;
+            --btn-border: #ccc;
+            --transition-speed: 0.3s;
+            --input-bg: #fff;
+            --input-border: #ccc;
+        }
+
+        /* Dark mode theme scoped to data-theme attribute */
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --btn-bg: #333;
+            --btn-border: #555;
+            --input-bg: #222;
+            --input-border: #444;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--btn-border);
+            border-radius: 10px;
+            background-color: rgba(128, 128, 128, 0.05);
+        }
+
+        .profile-section {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid var(--btn-border);
+            border-radius: 5px;
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        button:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            height: 20px;
+        }
+
+        #themeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+
+    <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {
+                console.error("Theme initialization failed", e);
+            }
+        })();
+    </script>
+</head>
+<body>
+
+    <button id="themeToggle">
+        Promeni boju pozadine
+    </button>
+
+    <div class="container">
+        <h1 id="greeting">Dobrodošli na Code Merlin aplikaciju</h1>
+        
+        <div class="profile-section">
+            <input type="text" id="nameInput" placeholder="Unesite vaše ime" aria-label="Unos imena">
+            <div id="errorMsg" class="error-message"></div>
+            <div class="button-group">
+                <button id="saveBtn">Sačuvaj</button>
+                <button id="resetBtn">Resetuj</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeBtn = document.getElementById('themeToggle');
+        const greeting = document.getElementById('greeting');
+        const nameInput = document.getElementById('nameInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // --- Theme Logic ---
+        const updateAriaLabel = (theme) => {
+            const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+            themeBtn.setAttribute('aria-label', label);
+        };
+
+        const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateAriaLabel(initialTheme);
+        
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            if (newTheme === 'light') document.documentElement.removeAttribute('data-theme');
+            updateAriaLabel(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // --- User Profile Logic ---
+        const updateGreeting = (name) => {
+            if (name) {
+                greeting.textContent = `Dobrodošli, ${name}!`;
+            } else {
+                greeting.textContent = "Dobrodošli na Code Merlin aplikaciju";
+            }
+        };
+
+        // Initial Load
+        const savedName = localStorage.getItem('username');
+        if (savedName) {
+            updateGreeting(savedName);
+            nameInput.value = savedName;
+        }
+
+        saveBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            errorMsg.textContent = "";
+
+            if (name === "") {
+                errorMsg.textContent = "Ime ne može biti prazno.";
+                return;
+            }
+            if (name.length > 20) {
+                errorMsg.textContent = "Ime ne može biti duže od 20 karaktera.";
+                return;
+            }
+
+            localStorage.setItem('username', name);
+            updateGreeting(name);
+        });
+
+        resetBtn.addEventListener('click', () => {
+            localStorage.removeItem('username');
+            nameInput.value = "";
+            errorMsg.textContent = "";
+            updateGreeting(null);
+        });
+    </script>
+
+</body>
+</html>
