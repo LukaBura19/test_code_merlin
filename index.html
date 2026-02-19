@@ -6,7 +6,6 @@
     <title>Code Merlin Aplikacija</title>
     
     <style>
-        /* CSS Variables for better maintainability */
         :root {
             --bg-color: #ffffff;
             --text-color: #000000;
@@ -17,7 +16,6 @@
             --input-border: #ccc;
         }
 
-        /* Dark mode theme scoped to data-theme attribute */
         [data-theme="dark"] {
             --bg-color: #000000;
             --text-color: #ffffff;
@@ -42,26 +40,28 @@
 
         .container {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             border: 1px solid var(--btn-border);
-            border-radius: 10px;
+            border-radius: 12px;
             background-color: rgba(128, 128, 128, 0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .profile-section {
-            margin-top: 20px;
+            margin-top: 25px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         input {
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 6px;
             border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
             font-size: 16px;
+            width: 250px;
         }
 
         .button-group {
@@ -75,7 +75,7 @@
             font-size: 16px;
             cursor: pointer;
             border: 1px solid var(--btn-border);
-            border-radius: 5px;
+            border-radius: 6px;
             background-color: var(--btn-bg);
             color: var(--text-color);
             transition: all var(--transition-speed) ease;
@@ -90,6 +90,7 @@
             color: #ff4444;
             font-size: 14px;
             height: 20px;
+            font-weight: bold;
         }
 
         #themeToggle {
@@ -99,18 +100,28 @@
         }
     </style>
 
-    <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
     <script>
+        // Safe Storage Wrapper to handle restricted environments
+        const storage = {
+            get: (key) => {
+                try { return localStorage.getItem(key); } 
+                catch (e) { return null; }
+            },
+            set: (key, value) => {
+                try { localStorage.setItem(key, value); return true; } 
+                catch (e) { return false; }
+            },
+            remove: (key) => {
+                try { localStorage.removeItem(key); return true; } 
+                catch (e) { return false; }
+            }
+        };
+
         (function() {
-            try {
-                const savedTheme = localStorage.getItem('theme');
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                
-                if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                }
-            } catch (e) {
-                console.error("Theme initialization failed", e);
+            const savedTheme = storage.get('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
             }
         })();
     </script>
@@ -125,8 +136,9 @@
         <h1 id="greeting">Dobrodošli na Code Merlin aplikaciju</h1>
         
         <div class="profile-section">
-            <input type="text" id="nameInput" placeholder="Unesite vaše ime" aria-label="Unos imena">
-            <div id="errorMsg" class="error-message"></div>
+            <input type="text" id="nameInput" placeholder="Unesite vaše ime" 
+                   aria-label="Unos imena" maxlength="20">
+            <div id="errorMsg" class="error-message" aria-live="polite"></div>
             <div class="button-group">
                 <button id="saveBtn">Sačuvaj</button>
                 <button id="resetBtn">Resetuj</button>
@@ -142,7 +154,6 @@
         const resetBtn = document.getElementById('resetBtn');
         const errorMsg = document.getElementById('errorMsg');
 
-        // --- Theme Logic ---
         const updateAriaLabel = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
             themeBtn.setAttribute('aria-label', label);
@@ -154,23 +165,23 @@
         themeBtn.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            if (newTheme === 'light') document.documentElement.removeAttribute('data-theme');
+            
+            if (newTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            
             updateAriaLabel(newTheme);
-            localStorage.setItem('theme', newTheme);
+            storage.set('theme', newTheme);
         });
 
-        // --- User Profile Logic ---
         const updateGreeting = (name) => {
-            if (name) {
-                greeting.textContent = `Dobrodošli, ${name}!`;
-            } else {
-                greeting.textContent = "Dobrodošli na Code Merlin aplikaciju";
-            }
+            // Using .textContent is safe against XSS
+            greeting.textContent = name ? `Dobrodošli, ${name}!` : "Dobrodošli na Code Merlin aplikaciju";
         };
 
-        // Initial Load
-        const savedName = localStorage.getItem('username');
+        const savedName = storage.get('username');
         if (savedName) {
             updateGreeting(savedName);
             nameInput.value = savedName;
@@ -178,23 +189,25 @@
 
         saveBtn.addEventListener('click', () => {
             const name = nameInput.value.trim();
-            errorMsg.textContent = "";
+            errorMsg.textContent = ""; // Clear errors on new attempt
 
             if (name === "") {
                 errorMsg.textContent = "Ime ne može biti prazno.";
                 return;
             }
+            
+            // Double check length even with HTML maxlength
             if (name.length > 20) {
                 errorMsg.textContent = "Ime ne može biti duže od 20 karaktera.";
                 return;
             }
 
-            localStorage.setItem('username', name);
+            storage.set('username', name);
             updateGreeting(name);
         });
 
         resetBtn.addEventListener('click', () => {
-            localStorage.removeItem('username');
+            storage.remove('username');
             nameInput.value = "";
             errorMsg.textContent = "";
             updateGreeting(null);

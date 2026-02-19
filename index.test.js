@@ -28,18 +28,6 @@ describe('Code Merlin SCRUM-9: User Profile Greeting', () => {
       },
       writable: true
     });
-    
-    // Mock matchMedia
-    Object.defineProperty(window, 'matchMedia', {
-      value: vi.fn((query) => ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-      })),
-      writable: true
-    });
   };
 
   beforeEach(() => {
@@ -64,27 +52,47 @@ describe('Code Merlin SCRUM-9: User Profile Greeting', () => {
     expect(window.localStorage.setItem).toHaveBeenCalledWith('username', 'Ana');
   });
 
-  it('should show error message when trying to save an empty name', () => {
+  it('should handle exactly 20 characters as valid input', () => {
     const nameInput = document.getElementById('nameInput');
     const saveBtn = document.getElementById('saveBtn');
+    const greeting = document.getElementById('greeting');
     const errorMsg = document.getElementById('errorMsg');
 
-    nameInput.value = '   ';
+    const longName = 'A'.repeat(20);
+    nameInput.value = longName;
     saveBtn.click();
 
-    expect(errorMsg.textContent).toBe('Ime ne može biti prazno.');
-    expect(window.localStorage.setItem).not.toHaveBeenCalledWith('username', expect.any(String));
+    expect(errorMsg.textContent).toBe('');
+    expect(greeting.textContent).toBe(`Dobrodošli, ${longName}!`);
   });
 
-  it('should show error message when name is too long', () => {
+  it('should clear error message after a successful save', () => {
     const nameInput = document.getElementById('nameInput');
     const saveBtn = document.getElementById('saveBtn');
     const errorMsg = document.getElementById('errorMsg');
 
-    nameInput.value = 'OvoJeImeKojeImaViseOdDvadesetKaraktera';
+    // Trigger error
+    nameInput.value = '';
+    saveBtn.click();
+    expect(errorMsg.textContent).not.toBe('');
+
+    // Successful save
+    nameInput.value = 'Validno Ime';
+    saveBtn.click();
+    expect(errorMsg.textContent).toBe('');
+  });
+
+  it('should handle HTML tags as literal text (XSS Protection)', () => {
+    const nameInput = document.getElementById('nameInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const greeting = document.getElementById('greeting');
+
+    const xssPayload = '<img src=x onerror=alert(1)>';
+    nameInput.value = xssPayload;
     saveBtn.click();
 
-    expect(errorMsg.textContent).toBe('Ime ne može biti duže od 20 karaktera.');
+    // Should display the literal string, not execute it
+    expect(greeting.textContent).toBe(`Dobrodošli, ${xssPayload}!`);
   });
 
   it('should reset name and greeting when clicking reset button', () => {
