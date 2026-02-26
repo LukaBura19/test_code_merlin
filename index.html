@@ -98,35 +98,64 @@
             top: 20px;
             right: 20px;
         }
+
+        /* Info banner styles */
+        #infoBanner {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 16px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background-color: rgba(255, 215, 0, 0.15);
+            border: 1px solid var(--btn-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        #infoBanner button {
+            min-width: 32px;
+        }
+
+        .banner-dismissed #infoBanner {
+            display: none;
+        }
     </style>
 
     <script>
-        // Safe Storage Wrapper to handle restricted environments
-        const storage = {
-            get: (key) => {
-                try { return localStorage.getItem(key); } 
-                catch (e) { return null; }
-            },
-            set: (key, value) => {
-                try { localStorage.setItem(key, value); return true; } 
-                catch (e) { return false; }
-            },
-            remove: (key) => {
-                try { localStorage.removeItem(key); return true; } 
-                catch (e) { return false; }
-            }
-        };
-
+        // Early initialization script (no dependencies) to prevent FOUC
         (function() {
-            const savedTheme = storage.get('theme');
+            let savedTheme = null;
+            let bannerDismissed = null;
+
+            try {
+                savedTheme = localStorage.getItem('theme');
+                bannerDismissed = localStorage.getItem('bannerDismissed');
+            } catch (e) {
+                // In restricted environments (e.g. private mode), fall back to defaults
+                savedTheme = null;
+                bannerDismissed = null;
+            }
+
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
                 document.documentElement.setAttribute('data-theme', 'dark');
+            }
+
+            // Initialize banner dismissed state early to avoid flicker
+            if (bannerDismissed === 'true') {
+                document.documentElement.classList.add('banner-dismissed');
             }
         })();
     </script>
 </head>
 <body>
+
+    <div id="infoBanner" role="status" aria-label="Informaciona poruka">
+        <span>Dobrodošli u Code Merlin – ovo je test okruženje.</span>
+        <button id="bannerCloseBtn" aria-label="Zatvori informativnu poruku">×</button>
+    </div>
 
     <button id="themeToggle">
         Promeni boju pozadine
@@ -147,7 +176,25 @@
     </div>
 
     <script>
+        // Safe Storage Wrapper to handle restricted environments
+        const storage = {
+            get: (key) => {
+                try { return localStorage.getItem(key); } 
+                catch (e) { return null; }
+            },
+            set: (key, value) => {
+                try { localStorage.setItem(key, value); return true; } 
+                catch (e) { return false; }
+            },
+            remove: (key) => {
+                try { localStorage.removeItem(key); return true; } 
+                catch (e) { return false; }
+            }
+        };
+
         const themeBtn = document.getElementById('themeToggle');
+        const infoBanner = document.getElementById('infoBanner');
+        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const greeting = document.getElementById('greeting');
         const nameInput = document.getElementById('nameInput');
         const saveBtn = document.getElementById('saveBtn');
@@ -212,6 +259,14 @@
             errorMsg.textContent = "";
             updateGreeting(null);
         });
+
+        // --- Info banner logic (SCRUM-10) ---
+        if (infoBanner && bannerCloseBtn) {
+            bannerCloseBtn.addEventListener('click', () => {
+                document.documentElement.classList.add('banner-dismissed');
+                storage.set('bannerDismissed', 'true');
+            });
+        }
     </script>
 
 </body>
