@@ -124,31 +124,26 @@
     </style>
 
     <script>
-        // Safe Storage Wrapper to handle restricted environments
-        const storage = {
-            get: (key) => {
-                try { return localStorage.getItem(key); } 
-                catch (e) { return null; }
-            },
-            set: (key, value) => {
-                try { localStorage.setItem(key, value); return true; } 
-                catch (e) { return false; }
-            },
-            remove: (key) => {
-                try { localStorage.removeItem(key); return true; } 
-                catch (e) { return false; }
-            }
-        };
-
+        // Early initialization script (no dependencies) to prevent FOUC
         (function() {
-            const savedTheme = storage.get('theme');
+            let savedTheme = null;
+            let bannerDismissed = null;
+
+            try {
+                savedTheme = localStorage.getItem('theme');
+                bannerDismissed = localStorage.getItem('bannerDismissed');
+            } catch (e) {
+                // In restricted environments (e.g. private mode), fall back to defaults
+                savedTheme = null;
+                bannerDismissed = null;
+            }
+
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
                 document.documentElement.setAttribute('data-theme', 'dark');
             }
 
             // Initialize banner dismissed state early to avoid flicker
-            const bannerDismissed = storage.get('bannerDismissed');
             if (bannerDismissed === 'true') {
                 document.documentElement.classList.add('banner-dismissed');
             }
@@ -181,6 +176,22 @@
     </div>
 
     <script>
+        // Safe Storage Wrapper to handle restricted environments
+        const storage = {
+            get: (key) => {
+                try { return localStorage.getItem(key); } 
+                catch (e) { return null; }
+            },
+            set: (key, value) => {
+                try { localStorage.setItem(key, value); return true; } 
+                catch (e) { return false; }
+            },
+            remove: (key) => {
+                try { localStorage.removeItem(key); return true; } 
+                catch (e) { return false; }
+            }
+        };
+
         const themeBtn = document.getElementById('themeToggle');
         const infoBanner = document.getElementById('infoBanner');
         const bannerCloseBtn = document.getElementById('bannerCloseBtn');
@@ -252,7 +263,6 @@
         // --- Info banner logic (SCRUM-10) ---
         if (infoBanner && bannerCloseBtn) {
             bannerCloseBtn.addEventListener('click', () => {
-                infoBanner.style.display = "none";
                 document.documentElement.classList.add('banner-dismissed');
                 storage.set('bannerDismissed', 'true');
             });

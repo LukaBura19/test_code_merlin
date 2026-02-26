@@ -113,16 +113,19 @@ describe('Code Merlin SCRUM-9/SCRUM-10: User Profile Greeting and Info Banner', 
   it('should show info banner by default when not dismissed', () => {
     const banner = document.getElementById('infoBanner');
     expect(banner).not.toBeNull();
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
   });
 
   it('should hide info banner and set localStorage when close button is clicked', () => {
     const banner = document.getElementById('infoBanner');
     const closeBtn = document.getElementById('bannerCloseBtn');
 
-    expect(banner.style.display).not.toBe('none');
+    expect(banner).not.toBeNull();
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
+
     closeBtn.click();
 
-    expect(banner.style.display).toBe('none');
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
     expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
   });
 
@@ -130,8 +133,30 @@ describe('Code Merlin SCRUM-9/SCRUM-10: User Profile Greeting and Info Banner', 
     setupDOM({ bannerDismissed: 'true' });
     const banner = document.getElementById('infoBanner');
 
-    // Element exists in DOM but should be effectively hidden by class
     expect(banner).not.toBeNull();
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
+  });
+
+  it('should show banner when bannerDismissed is \"false\" in storage', () => {
+    setupDOM({ bannerDismissed: 'false' });
+    const banner = document.getElementById('infoBanner');
+
+    expect(banner).not.toBeNull();
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
+  });
+
+  it('should hide banner even if localStorage.setItem throws', () => {
+    const banner = document.getElementById('infoBanner');
+    const closeBtn = document.getElementById('bannerCloseBtn');
+
+    // Force setItem to throw
+    window.localStorage.setItem.mockImplementation(() => {
+      throw new Error('quota exceeded');
+    });
+
+    closeBtn.click();
+
+    // UI should still reflect dismissed state
     expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
   });
 });
