@@ -5,7 +5,7 @@ import path from 'path';
 
 const html = fs.readFileSync(path.resolve(__dirname, './index.html'), 'utf8');
 
-describe('Code Merlin SCRUM-9: User Profile Greeting', () => {
+describe('Code Merlin SCRUM-9/SCRUM-10: User Profile Greeting and Info Banner', () => {
   let dom;
   let document;
   let window;
@@ -106,5 +106,32 @@ describe('Code Merlin SCRUM-9: User Profile Greeting', () => {
     expect(greeting.textContent).toBe('Dobrodošli na Code Merlin aplikaciju');
     expect(nameInput.value).toBe('');
     expect(window.localStorage.removeItem).toHaveBeenCalledWith('username');
+  });
+
+  // --- SCRUM-10: Info banner tests ---
+
+  it('should show info banner by default when not dismissed', () => {
+    const banner = document.getElementById('infoBanner');
+    expect(banner).not.toBeNull();
+  });
+
+  it('should hide info banner and set localStorage when close button is clicked', () => {
+    const banner = document.getElementById('infoBanner');
+    const closeBtn = document.getElementById('bannerCloseBtn');
+
+    expect(banner.style.display).not.toBe('none');
+    closeBtn.click();
+
+    expect(banner.style.display).toBe('none');
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+  });
+
+  it('should initialize with banner dismissed when bannerDismissed is true in storage', () => {
+    setupDOM({ bannerDismissed: 'true' });
+    const banner = document.getElementById('infoBanner');
+
+    // Element exists in DOM but should be effectively hidden by class
+    expect(banner).not.toBeNull();
+    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
   });
 });
