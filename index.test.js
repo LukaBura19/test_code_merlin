@@ -86,4 +86,32 @@ describe('Code Merlin Landing Page', () => {
     setupDOM({}, true); // No localStorage, but system prefers dark
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
+
+  it('should show initial name character counter as 0/20', () => {
+    const nameCounter = document.getElementById('nameCounter');
+    expect(nameCounter.textContent).toBe('0/20 characters');
+  });
+
+  it('should update character counter as the user types', () => {
+    const nameInput = document.getElementById('nameInput');
+    const nameCounter = document.getElementById('nameCounter');
+
+    nameInput.value = 'Test';
+    nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    expect(nameCounter.textContent).toBe('4/20 characters');
+  });
+
+  it('should apply warning class when length is between 18 and 20', () => {
+    const nameInput = document.getElementById('nameInput');
+    const nameCounter = document.getElementById('nameCounter');
+
+    nameInput.value = 'a'.repeat(19);
+    nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    expect(nameCounter.classList.contains('warning')).toBe(true);
+
+    nameInput.value = 'a'.repeat(20);
+    nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    expect(nameCounter.classList.contains('warning')).toBe(true);
+  });
 });

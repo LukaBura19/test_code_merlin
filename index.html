@@ -51,6 +51,29 @@
             opacity: 0.8;
             transform: translateY(-1px);
         }
+
+        .form-group {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        #nameInput {
+            padding: 8px;
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .char-counter {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-color);
+        }
+
+        .char-counter.warning {
+            color: #d9534f;
+        }
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
@@ -73,12 +96,36 @@
 
     <h1>Dobrodošli na Code Merlin aplikaciju</h1>
     
+    <div class="form-group">
+        <label for="nameInput">Ime</label>
+        <input id="nameInput" type="text" />
+        <span id="nameCounter" class="char-counter">0/20 characters</span>
+    </div>
+    
     <button id="themeToggle">
         Promeni boju pozadine
     </button>
 
     <script>
         const button = document.getElementById('themeToggle');
+        const nameInput = document.getElementById('nameInput');
+        const nameCounter = document.getElementById('nameCounter');
+        const NAME_MAX_LENGTH = 20;
+
+        const updateNameCounter = () => {
+            if (!nameInput || !nameCounter) return;
+
+            const length = nameInput.value.length;
+            nameCounter.textContent = `${length}/${NAME_MAX_LENGTH} characters`;
+
+            if (length >= 18 && length <= NAME_MAX_LENGTH) {
+                nameCounter.classList.add('warning');
+            } else {
+                nameCounter.classList.remove('warning');
+            }
+        };
+
+        updateNameCounter();
         
         // Function to update aria-label based on current theme
         const updateAriaLabel = (theme) => {
@@ -108,6 +155,10 @@
                 console.warn("Could not save theme to localStorage", e);
             }
         });
+
+        if (nameInput) {
+            nameInput.addEventListener('input', updateNameCounter);
+        }
     </script>
 
 </body>
