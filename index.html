@@ -51,6 +51,37 @@
             opacity: 0.8;
             transform: translateY(-1px);
         }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .storage-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 400px;
+        }
+
+        .storage-message.hidden {
+            display: none;
+        }
+
+        .storage-message .dismiss-btn {
+            margin-left: auto;
+            padding: 2px 8px;
+            font-size: 18px;
+            line-height: 1;
+            min-width: auto;
+        }
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
@@ -71,22 +102,51 @@
 </head>
 <body>
 
-    <h1>Dobrodošli na Code Merlin aplikaciju</h1>
-    
-    <button id="themeToggle">
-        Promeni boju pozadine
-    </button>
+    <div class="container">
+        <h1>Dobrodošli na Code Merlin aplikaciju</h1>
+        
+        <button id="themeToggle">
+            Promeni boju pozadine
+        </button>
+
+        <div id="storageMessage" class="storage-message hidden" role="status">
+            <span>We can't save your theme on this device, but the change will last while this page is open.</span>
+            <button type="button" class="dismiss-btn" aria-label="Dismiss">×</button>
+        </div>
+    </div>
 
     <script>
         const button = document.getElementById('themeToggle');
+        const storageMessage = document.getElementById('storageMessage');
+        const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+
+        const storage = {
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (e) {
+                    console.warn("Could not save theme to localStorage", e);
+                    return false;
+                }
+            }
+        };
+
+        const showStorageMessage = () => {
+            storageMessage.classList.remove('hidden');
+        };
+
+        const hideStorageMessage = () => {
+            storageMessage.classList.add('hidden');
+        };
+
+        dismissBtn.addEventListener('click', hideStorageMessage);
         
-        // Function to update aria-label based on current theme
         const updateAriaLabel = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
             button.setAttribute('aria-label', label);
         };
 
-        // Initial aria-label setup
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
         updateAriaLabel(initialTheme);
         
@@ -102,10 +162,9 @@
             
             updateAriaLabel(newTheme);
             
-            try {
-                localStorage.setItem('theme', newTheme);
-            } catch (e) {
-                console.warn("Could not save theme to localStorage", e);
+            const saved = storage.set('theme', newTheme);
+            if (!saved) {
+                showStorageMessage();
             }
         });
     </script>
