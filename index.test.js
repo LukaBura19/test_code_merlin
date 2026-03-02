@@ -100,6 +100,6 @@ describe('Code Merlin Landing Page', () => {
     button.click();
 
     expect(storageMessage.classList.contains('hidden')).toBe(false);
-    expect(storageMessage.textContent).toContain("We can't save your theme on this device");
+    expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
   });
 });
