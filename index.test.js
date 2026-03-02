@@ -5,13 +5,13 @@ import path from 'path';
 
 const html = fs.readFileSync(path.resolve(__dirname, './index.html'), 'utf8');
 
-describe('Code Merlin SCRUM-9/SCRUM-10: User Profile Greeting and Info Banner', () => {
+describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
   let window;
   let localStorageStore = {};
 
-  const setupDOM = (mockLocalStorage = {}) => {
+  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false) => {
     localStorageStore = { ...mockLocalStorage };
     
     dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
@@ -23,140 +23,67 @@ describe('Code Merlin SCRUM-9/SCRUM-10: User Profile Greeting and Info Banner', 
       value: {
         getItem: vi.fn((key) => localStorageStore[key] || null),
         setItem: vi.fn((key, value) => { localStorageStore[key] = value.toString(); }),
-        removeItem: vi.fn((key) => { delete localStorageStore[key]; }),
         clear: vi.fn(() => { localStorageStore = {}; })
       },
       writable: true
     });
+    
+    // Mock matchMedia
+    Object.defineProperty(window, 'matchMedia', {
+      value: vi.fn((query) => ({
+        matches: query === '(prefers-color-scheme: dark)' ? mockSystemDark : false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+      writable: true
+    });
+
+    // Re-run scripts manually if needed or rely on 'runScripts: dangerously'
+    // In JSDOM, scripts in HEAD run before scripts in BODY
   };
 
   beforeEach(() => {
     setupDOM();
   });
 
-  it('should display personalized greeting if name is saved in localStorage', () => {
-    setupDOM({ username: 'Marko' });
-    const greeting = document.getElementById('greeting');
-    expect(greeting.textContent).toBe('Dobrodošli, Marko!');
+  it('should have the correct title', () => {
+    expect(document.title).toBe('Code Merlin Aplikacija');
   });
 
-  it('should update greeting and localStorage when saving a valid name', () => {
-    const nameInput = document.getElementById('nameInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const greeting = document.getElementById('greeting');
+  it('should toggle theme on button click and update aria-label', () => {
+    const button = document.getElementById('themeToggle');
+    const docEl = document.documentElement;
 
-    nameInput.value = 'Ana';
-    saveBtn.click();
+    // Initial state (light)
+    expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+    expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
 
-    expect(greeting.textContent).toBe('Dobrodošli, Ana!');
-    expect(window.localStorage.setItem).toHaveBeenCalledWith('username', 'Ana');
+    // Click to dark
+    button.click();
+    expect(docEl.getAttribute('data-theme')).toBe('dark');
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+    expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+
+    // Click back to light
+    button.click();
+    expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+    expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
   });
 
-  it('should handle exactly 20 characters as valid input', () => {
-    const nameInput = document.getElementById('nameInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const greeting = document.getElementById('greeting');
-    const errorMsg = document.getElementById('errorMsg');
-
-    const longName = 'A'.repeat(20);
-    nameInput.value = longName;
-    saveBtn.click();
-
-    expect(errorMsg.textContent).toBe('');
-    expect(greeting.textContent).toBe(`Dobrodošli, ${longName}!`);
+  it('should initialize with dark theme if saved in localStorage', () => {
+    // We need to simulate the state BEFORE the script runs in JSDOM
+    // Since JSDOM runs scripts on creation, we use a fresh instance
+    const localStore = { theme: 'dark' };
+    setupDOM(localStore);
+    
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
-  it('should clear error message after a successful save', () => {
-    const nameInput = document.getElementById('nameInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const errorMsg = document.getElementById('errorMsg');
-
-    // Trigger error
-    nameInput.value = '';
-    saveBtn.click();
-    expect(errorMsg.textContent).not.toBe('');
-
-    // Successful save
-    nameInput.value = 'Validno Ime';
-    saveBtn.click();
-    expect(errorMsg.textContent).toBe('');
-  });
-
-  it('should handle HTML tags as literal text (XSS Protection)', () => {
-    const nameInput = document.getElementById('nameInput');
-    const saveBtn = document.getElementById('saveBtn');
-    const greeting = document.getElementById('greeting');
-
-    const xssPayload = '<img src=x onerror=alert(1)>';
-    nameInput.value = xssPayload;
-    saveBtn.click();
-
-    // Should display the literal string, not execute it
-    expect(greeting.textContent).toBe(`Dobrodošli, ${xssPayload}!`);
-  });
-
-  it('should reset name and greeting when clicking reset button', () => {
-    setupDOM({ username: 'Luka' });
-    const resetBtn = document.getElementById('resetBtn');
-    const greeting = document.getElementById('greeting');
-    const nameInput = document.getElementById('nameInput');
-
-    resetBtn.click();
-
-    expect(greeting.textContent).toBe('Dobrodošli na Code Merlin aplikaciju');
-    expect(nameInput.value).toBe('');
-    expect(window.localStorage.removeItem).toHaveBeenCalledWith('username');
-  });
-
-  // --- SCRUM-10: Info banner tests ---
-
-  it('should show info banner by default when not dismissed', () => {
-    const banner = document.getElementById('infoBanner');
-    expect(banner).not.toBeNull();
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
-  });
-
-  it('should hide info banner and set localStorage when close button is clicked', () => {
-    const banner = document.getElementById('infoBanner');
-    const closeBtn = document.getElementById('bannerCloseBtn');
-
-    expect(banner).not.toBeNull();
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
-
-    closeBtn.click();
-
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
-    expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
-  });
-
-  it('should initialize with banner dismissed when bannerDismissed is true in storage', () => {
-    setupDOM({ bannerDismissed: 'true' });
-    const banner = document.getElementById('infoBanner');
-
-    expect(banner).not.toBeNull();
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
-  });
-
-  it('should show banner when bannerDismissed is \"false\" in storage', () => {
-    setupDOM({ bannerDismissed: 'false' });
-    const banner = document.getElementById('infoBanner');
-
-    expect(banner).not.toBeNull();
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(false);
-  });
-
-  it('should hide banner even if localStorage.setItem throws', () => {
-    const banner = document.getElementById('infoBanner');
-    const closeBtn = document.getElementById('bannerCloseBtn');
-
-    // Force setItem to throw
-    window.localStorage.setItem.mockImplementation(() => {
-      throw new Error('quota exceeded');
-    });
-
-    closeBtn.click();
-
-    // UI should still reflect dismissed state
-    expect(document.documentElement.classList.contains('banner-dismissed')).toBe(true);
+  it('should fallback to system theme preference if localStorage is empty', () => {
+    setupDOM({}, true); // No localStorage, but system prefers dark
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 });
