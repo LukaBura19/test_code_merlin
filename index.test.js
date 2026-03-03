@@ -11,37 +11,39 @@ describe('Code Merlin Landing Page', () => {
   let window;
   let localStorageStore = {};
 
-  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false) => {
+  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false) => {
     localStorageStore = { ...mockLocalStorage };
-    
-    dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable' });
+
+    const setItemImpl = setItemThrows
+      ? vi.fn(() => { throw new Error('QuotaExceededError'); })
+      : vi.fn((key, value) => { localStorageStore[key] = value.toString(); });
+
+    dom = new JSDOM(html, {
+      runScripts: 'dangerously',
+      resources: 'usable',
+      beforeParse: (win) => {
+        Object.defineProperty(win, 'localStorage', {
+          value: {
+            getItem: vi.fn((key) => localStorageStore[key] || null),
+            setItem: setItemImpl,
+            clear: vi.fn(() => { localStorageStore = {}; })
+          },
+          writable: true
+        });
+        Object.defineProperty(win, 'matchMedia', {
+          value: vi.fn((query) => ({
+            matches: query === '(prefers-color-scheme: dark)' ? mockSystemDark : false,
+            media: query,
+            onchange: null,
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+          })),
+          writable: true
+        });
+      }
+    });
     window = dom.window;
     document = window.document;
-
-    // Mock localStorage
-    Object.defineProperty(window, 'localStorage', {
-      value: {
-        getItem: vi.fn((key) => localStorageStore[key] || null),
-        setItem: vi.fn((key, value) => { localStorageStore[key] = value.toString(); }),
-        clear: vi.fn(() => { localStorageStore = {}; })
-      },
-      writable: true
-    });
-    
-    // Mock matchMedia
-    Object.defineProperty(window, 'matchMedia', {
-      value: vi.fn((query) => ({
-        matches: query === '(prefers-color-scheme: dark)' ? mockSystemDark : false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-      })),
-      writable: true
-    });
-
-    // Re-run scripts manually if needed or rely on 'runScripts: dangerously'
-    // In JSDOM, scripts in HEAD run before scripts in BODY
   };
 
   beforeEach(() => {
@@ -87,6 +89,18 @@ describe('Code Merlin Landing Page', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
+  it('should show fallback message when localStorage.setItem throws (e.g. private mode)', () => {
+    setupDOM({}, false, true); // setItemThrows = true
+
+    const button = document.getElementById('themeToggle');
+    const storageMessage = document.getElementById('storageMessage');
+
+    expect(storageMessage.classList.contains('hidden')).toBe(true);
+
+    button.click();
+
+    expect(storageMessage.classList.contains('hidden')).toBe(false);
+    expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
     expect(nameCounter.textContent).toBe('0/20 characters');
