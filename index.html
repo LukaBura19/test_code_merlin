@@ -116,6 +116,36 @@
         .char-counter.warning {
             color: #d9534f;
         }
+
+        .name-error {
+            color: #d9534f;
+            font-size: 12px;
+            margin-top: 4px;
+            min-height: 18px;
+        }
+
+        .banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: var(--btn-bg);
+            border-bottom: 1px solid var(--btn-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .banner.hidden {
+            display: none;
+        }
+
+        .banner-close-btn {
+            padding: 4px 10px;
+            min-width: auto;
+        }
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
@@ -136,6 +166,11 @@
 </head>
 <body>
 
+    <div id="banner" class="banner" role="banner">
+        <span>Dobrodošli! Koristite aplikaciju slobodno.</span>
+        <button id="bannerCloseBtn" type="button" class="banner-close-btn" aria-label="Zatvori banner">×</button>
+    </div>
+
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
@@ -149,7 +184,8 @@
         </div>
         <div class="form-group">
             <label for="nameInput">Ime</label>
-            <input id="nameInput" type="text" />
+            <input id="nameInput" type="text" maxlength="20" />
+            <span id="nameError" class="name-error" aria-live="polite"></span>
             <span id="nameCounter" class="char-counter">0/20 characters</span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
         </div>
@@ -185,11 +221,26 @@
 
         const nameInput = document.getElementById('nameInput');
         const nameCounter = document.getElementById('nameCounter');
+        const nameError = document.getElementById('nameError');
         const saveBtn = document.getElementById('saveBtn');
         const greeting = document.getElementById('greeting');
+        const banner = document.getElementById('banner');
+        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const NAME_MAX_LENGTH = 20;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
+
+        const clearNameError = () => {
+            if (nameError) nameError.textContent = '';
+            if (nameInput) nameInput.removeAttribute('aria-invalid');
+        };
+
+        const showNameError = (msg) => {
+            if (nameError) {
+                nameError.textContent = msg;
+                if (nameInput) nameInput.setAttribute('aria-invalid', 'true');
+            }
+        };
 
         const updateSaveButtonState = () => {
             if (!saveBtn) return;
@@ -216,12 +267,38 @@
             greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
         };
 
+        const performSave = () => {
+            const name = nameInput?.value?.trim() || '';
+            if (!isValidNameLength(name.length)) {
+                showNameError(name.length === 0 ? 'Ime je obavezno (1–20 karaktera).' : 'Ime mora imati 1–20 karaktera.');
+                return;
+            }
+            clearNameError();
+            localStorage.setItem('userName', name);
+            displayGreeting(name);
+        };
+
+        const clearInputAndError = () => {
+            if (nameInput) nameInput.value = '';
+            clearNameError();
+            updateNameCounter();
+        };
+
+        const closeBanner = () => {
+            if (banner) banner.classList.add('hidden');
+            try { localStorage.setItem('bannerDismissed', 'true'); } catch (e) {}
+        };
+
         updateNameCounter();
         const savedName = localStorage.getItem('userName');
         if (savedName) {
             displayGreeting(savedName);
         }
         updateSaveButtonState();
+
+        if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
+            banner.classList.add('hidden');
+        }
 
         const updateAriaLabel = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
@@ -251,15 +328,28 @@
 
         if (nameInput) {
             nameInput.addEventListener('input', updateNameCounter);
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSave();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    clearInputAndError();
+                }
+            });
         }
 
         if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                if (saveBtn.disabled) return;
-                const name = nameInput?.value?.trim() || '';
-                if (!isValidNameLength(name.length)) return;
-                localStorage.setItem('userName', name);
-                displayGreeting(name);
+            saveBtn.addEventListener('click', performSave);
+        }
+
+        if (bannerCloseBtn) {
+            bannerCloseBtn.addEventListener('click', closeBanner);
+            bannerCloseBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    closeBanner();
+                }
             });
         }
     </script>
