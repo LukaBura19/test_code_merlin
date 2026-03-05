@@ -235,5 +235,22 @@ describe('Code Merlin Landing Page', () => {
       expect(banner.classList.contains('hidden')).toBe(true);
       expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
     });
+
+    it('should show error when pressing Enter with empty input', () => {
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(nameError.textContent).toContain('Ime je obavezno');
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('should hide banner on page load when bannerDismissed is in localStorage', () => {
+      setupDOM({ bannerDismissed: 'true' });
+      const banner = document.getElementById('banner');
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+    });
   });
 });

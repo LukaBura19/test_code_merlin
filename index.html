@@ -184,7 +184,7 @@
         </div>
         <div class="form-group">
             <label for="nameInput">Ime</label>
-            <input id="nameInput" type="text" />
+            <input id="nameInput" type="text" maxlength="20" />
             <span id="nameError" class="name-error" aria-live="polite"></span>
             <span id="nameCounter" class="char-counter">0/20 characters</span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
@@ -232,10 +232,14 @@
 
         const clearNameError = () => {
             if (nameError) nameError.textContent = '';
+            if (nameInput) nameInput.removeAttribute('aria-invalid');
         };
 
         const showNameError = (msg) => {
-            if (nameError) nameError.textContent = msg;
+            if (nameError) {
+                nameError.textContent = msg;
+                if (nameInput) nameInput.setAttribute('aria-invalid', 'true');
+            }
         };
 
         const updateSaveButtonState = () => {
