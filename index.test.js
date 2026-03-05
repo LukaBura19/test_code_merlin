@@ -101,6 +101,8 @@ describe('Code Merlin Landing Page', () => {
 
     expect(storageMessage.classList.contains('hidden')).toBe(false);
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
+  });
+
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
     expect(nameCounter.textContent).toBe('0/20 characters');
@@ -127,5 +129,55 @@ describe('Code Merlin Landing Page', () => {
     nameInput.value = 'a'.repeat(20);
     nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
     expect(nameCounter.classList.contains('warning')).toBe(true);
+  });
+
+  describe('SCRUM-16: Save button validation', () => {
+    it('should have saveBtn disabled initially when input is empty', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      expect(nameInput.value).toBe('');
+      expect(saveBtn.disabled).toBe(true);
+    });
+
+    it('should enable saveBtn when entering a valid name (1-20 characters)', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+
+      nameInput.value = 'Test'; // 4 characters
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+      expect(saveBtn.disabled).toBe(false);
+    });
+
+    it('should disable saveBtn when entering 21+ characters and clicking should not change greeting or call localStorage.setItem', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      // Enter valid name first, then invalid
+      nameInput.value = 'a'.repeat(5);
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      expect(saveBtn.disabled).toBe(false);
+
+      // Save to set initial greeting
+      saveBtn.click();
+      const initialGreeting = greeting.textContent;
+      const setItemCallsBefore = window.localStorage.setItem.mock.calls.length;
+
+      // Now enter 21+ characters - button should disable
+      nameInput.value = 'a'.repeat(21);
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      expect(saveBtn.disabled).toBe(true);
+
+      // Click when disabled - should not change greeting or call setItem for userName
+      saveBtn.click();
+
+      expect(greeting.textContent).toBe(initialGreeting);
+      const userNameCalls = window.localStorage.setItem.mock.calls.filter(
+        (call) => call[0] === 'userName'
+      );
+      // Number of userName setItem calls should be same as before (we had 1 from the initial save)
+      expect(userNameCalls.length).toBe(1);
+    });
   });
 });
