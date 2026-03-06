@@ -183,4 +183,77 @@ describe('Code Merlin Landing Page', () => {
       expect(userNameCalls.length).toBe(1);
     });
   });
+
+  describe('SCRUM-15: Keyboard UX for name input and banner', () => {
+    it('should update greeting and localStorage when pressing Enter in input with valid name', () => {
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('userName', 'Ana');
+    });
+
+    it('should clear input and error message when pressing Escape in nameInput', () => {
+      setupDOM({ userName: 'Marko' });
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'invalid typo';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(nameInput.value).toBe('');
+      expect(nameError.textContent).toBe('');
+      expect(greeting.textContent).toBe('Dobrodošli, Marko!');
+    });
+
+    it('should hide banner and set bannerDismissed when pressing Enter on bannerCloseBtn', () => {
+      const banner = document.getElementById('banner');
+      const bannerCloseBtn = document.getElementById('bannerCloseBtn');
+
+      expect(banner.classList.contains('hidden')).toBe(false);
+
+      bannerCloseBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+    });
+
+    it('should hide banner and set bannerDismissed when pressing Space on bannerCloseBtn', () => {
+      setupDOM();
+      const banner = document.getElementById('banner');
+      const bannerCloseBtn = document.getElementById('bannerCloseBtn');
+
+      expect(banner.classList.contains('hidden')).toBe(false);
+
+      bannerCloseBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+    });
+
+    it('should show error when pressing Enter with empty input', () => {
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(nameError.textContent).toContain('Ime je obavezno');
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('should hide banner on page load when bannerDismissed is in localStorage', () => {
+      setupDOM({ bannerDismissed: 'true' });
+      const banner = document.getElementById('banner');
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+    });
+  });
 });
