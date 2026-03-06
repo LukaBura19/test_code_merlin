@@ -124,6 +124,17 @@
             min-height: 18px;
         }
 
+        .save-success-message {
+            font-size: 14px;
+            color: #28a745;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        .save-success-message.hidden {
+            display: none;
+        }
+
         .banner {
             position: fixed;
             top: 0;
@@ -188,6 +199,7 @@
             <span id="nameError" class="name-error" aria-live="polite"></span>
             <span id="nameCounter" class="char-counter">0/20 characters</span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
+            <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
         <p id="greeting" aria-live="polite"></p>
     </div>
@@ -223,7 +235,9 @@
         const nameCounter = document.getElementById('nameCounter');
         const nameError = document.getElementById('nameError');
         const saveBtn = document.getElementById('saveBtn');
+        const saveSuccessMessage = document.getElementById('saveSuccessMessage');
         const greeting = document.getElementById('greeting');
+        let successMessageTimeout = null;
         const banner = document.getElementById('banner');
         const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const NAME_MAX_LENGTH = 20;
@@ -267,7 +281,27 @@
             greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
         };
 
+        const hideSaveSuccessMessage = () => {
+            if (successMessageTimeout) {
+                clearTimeout(successMessageTimeout);
+                successMessageTimeout = null;
+            }
+            if (saveSuccessMessage) {
+                saveSuccessMessage.classList.add('hidden');
+                saveSuccessMessage.textContent = '';
+            }
+        };
+
+        const showSaveSuccessMessage = () => {
+            hideSaveSuccessMessage();
+            if (!saveSuccessMessage) return;
+            saveSuccessMessage.textContent = 'Name has been saved successfully.';
+            saveSuccessMessage.classList.remove('hidden');
+            successMessageTimeout = setTimeout(hideSaveSuccessMessage, 4000);
+        };
+
         const performSave = () => {
+            hideSaveSuccessMessage();
             const name = nameInput?.value?.trim() || '';
             if (!isValidNameLength(name.length)) {
                 showNameError(name.length === 0 ? 'Ime je obavezno (1–20 karaktera).' : 'Ime mora imati 1–20 karaktera.');
@@ -276,9 +310,11 @@
             clearNameError();
             localStorage.setItem('userName', name);
             displayGreeting(name);
+            showSaveSuccessMessage();
         };
 
         const clearInputAndError = () => {
+            hideSaveSuccessMessage();
             if (nameInput) nameInput.value = '';
             clearNameError();
             updateNameCounter();
