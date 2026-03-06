@@ -139,9 +139,7 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle">
-            Promeni boju pozadine
-        </button>
+        <button id="themeToggle"></button>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -223,13 +221,14 @@
         }
         updateSaveButtonState();
 
-        const updateAriaLabel = (theme) => {
+        const updateThemeToggleButton = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
             button.setAttribute('aria-label', label);
+            button.textContent = label;
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggleButton(initialTheme);
 
         button.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -241,7 +240,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggleButton(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {

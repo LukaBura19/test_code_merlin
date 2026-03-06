@@ -54,25 +54,28 @@ describe('Code Merlin Landing Page', () => {
     expect(document.title).toBe('Code Merlin Aplikacija');
   });
 
-  it('should toggle theme on button click and update aria-label', () => {
+  it('should toggle theme on button click and update aria-label and visible text', () => {
     const button = document.getElementById('themeToggle');
     const docEl = document.documentElement;
 
     // Initial state (light)
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.textContent).toBe('Prebaci na tamnu temu');
 
     // Click to dark
     button.click();
     expect(docEl.getAttribute('data-theme')).toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    expect(button.textContent).toBe('Prebaci na svetlu temu');
 
     // Click back to light
     button.click();
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.textContent).toBe('Prebaci na tamnu temu');
   });
 
   it('should initialize with dark theme if saved in localStorage', () => {
