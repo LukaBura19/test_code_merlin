@@ -103,6 +103,66 @@ describe('Code Merlin Landing Page', () => {
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
   });
 
+  describe('SCRUM-19: Global keyboard shortcut for theme switching', () => {
+    it('should toggle theme when pressing Ctrl+Shift+T (same as clicking themeToggle)', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    });
+
+    it('should restore original theme when pressing Ctrl+Shift+T again', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    });
+
+    it('should not toggle theme when typing T in nameInput without modifiers', () => {
+      const nameInput = document.getElementById('nameInput');
+      const docEl = document.documentElement;
+
+      nameInput.focus();
+      nameInput.value = 'T';
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: false,
+        shiftKey: false,
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(nameInput.value).toBe('T');
+    });
+  });
+
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
     expect(nameCounter.textContent).toBe('0/20 characters');
