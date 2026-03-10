@@ -190,6 +190,50 @@ describe('Code Merlin Landing Page', () => {
       expect(saveBtn.disabled).toBe(false);
     });
 
+    it('should show success message after saving valid name (SCRUM-17)', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt (SCRUM-17)', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should hide success message when pressing Escape (SCRUM-17)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
     it('should disable saveBtn when entering 21+ characters and clicking should not change greeting or call localStorage.setItem', () => {
       const saveBtn = document.getElementById('saveBtn');
       const nameInput = document.getElementById('nameInput');
@@ -219,6 +263,818 @@ describe('Code Merlin Landing Page', () => {
       );
       // Number of userName setItem calls should be same as before (we had 1 from the initial save)
       expect(userNameCalls.length).toBe(1);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when pressing Escape', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should show success message again on next save (previous message replaced)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should hide success message when pressing Escape', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after save', () => {
+    it('should show success message after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      document.getElementById('saveBtn').click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after save', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      document.getElementById('saveBtn').click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after save', () => {
+    it('should show success message after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      document.getElementById('saveBtn').click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after save', () => {
+    it('should show success message after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      document.getElementById('saveBtn').click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-15: Keyboard UX for name input and banner', () => {
+    it('should update greeting and localStorage when pressing Enter in input with valid name', () => {
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('userName', 'Ana');
+    });
+
+    it('should clear input and error message when pressing Escape in nameInput', () => {
+      setupDOM({ userName: 'Marko' });
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'invalid typo';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(nameInput.value).toBe('');
+      expect(nameError.textContent).toBe('');
+      expect(greeting.textContent).toBe('Dobrodošli, Marko!');
+    });
+
+    it('should hide banner and set bannerDismissed when pressing Enter on bannerCloseBtn', () => {
+      const banner = document.getElementById('banner');
+      const bannerCloseBtn = document.getElementById('bannerCloseBtn');
+
+      expect(banner.classList.contains('hidden')).toBe(false);
+
+      bannerCloseBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+    });
+
+    it('should hide banner and set bannerDismissed when pressing Space on bannerCloseBtn', () => {
+      setupDOM();
+      const banner = document.getElementById('banner');
+      const bannerCloseBtn = document.getElementById('bannerCloseBtn');
+
+      expect(banner.classList.contains('hidden')).toBe(false);
+
+      bannerCloseBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+    });
+
+    it('should show error when pressing Enter with empty input', () => {
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(nameError.textContent).toContain('Ime je obavezno');
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('should hide banner on page load when bannerDismissed is in localStorage', () => {
+      setupDOM({ bannerDismissed: 'true' });
+      const banner = document.getElementById('banner');
+
+      expect(banner.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Name has been saved successfully." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+    });
+
+    it('should hide success message when Escape clears input', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
     });
   });
 });

@@ -145,6 +145,11 @@
 </head>
 <body>
 
+    <div id="banner" class="banner" role="banner">
+        <span>Dobrodošli! Koristite aplikaciju slobodno.</span>
+        <button id="bannerCloseBtn" type="button" class="banner-close-btn" aria-label="Zatvori banner">×</button>
+    </div>
+
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
@@ -156,9 +161,11 @@
         </div>
         <div class="form-group">
             <label for="nameInput">Ime</label>
-            <input id="nameInput" type="text" />
+            <input id="nameInput" type="text" maxlength="20" />
+            <span id="nameError" class="name-error" aria-live="polite"></span>
             <span id="nameCounter" class="char-counter">0/20 characters</span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
+            <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
         <p id="greeting" aria-live="polite"></p>
     </div>
@@ -192,11 +199,28 @@
 
         const nameInput = document.getElementById('nameInput');
         const nameCounter = document.getElementById('nameCounter');
+        const nameError = document.getElementById('nameError');
         const saveBtn = document.getElementById('saveBtn');
+        const saveSuccessMessage = document.getElementById('saveSuccessMessage');
         const greeting = document.getElementById('greeting');
+        let successMessageTimeout = null;
+        const banner = document.getElementById('banner');
+        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const NAME_MAX_LENGTH = 20;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
+
+        const clearNameError = () => {
+            if (nameError) nameError.textContent = '';
+            if (nameInput) nameInput.removeAttribute('aria-invalid');
+        };
+
+        const showNameError = (msg) => {
+            if (nameError) {
+                nameError.textContent = msg;
+                if (nameInput) nameInput.setAttribute('aria-invalid', 'true');
+            }
+        };
 
         const updateSaveButtonState = () => {
             if (!saveBtn) return;
@@ -229,6 +253,50 @@
             }
         };
 
+        const hideSaveSuccessMessage = () => {
+            if (successMessageTimeout) {
+                clearTimeout(successMessageTimeout);
+                successMessageTimeout = null;
+            }
+            if (saveSuccessMessage) {
+                saveSuccessMessage.classList.add('hidden');
+                saveSuccessMessage.textContent = '';
+            }
+        };
+
+        const showSaveSuccessMessage = () => {
+            hideSaveSuccessMessage();
+            if (!saveSuccessMessage) return;
+            saveSuccessMessage.textContent = 'Name has been saved successfully.';
+            saveSuccessMessage.classList.remove('hidden');
+            successMessageTimeout = setTimeout(hideSaveSuccessMessage, 4000);
+        };
+
+        const performSave = () => {
+            hideSaveSuccessMessage();
+            const name = nameInput?.value?.trim() || '';
+            if (!isValidNameLength(name.length)) {
+                showNameError(name.length === 0 ? 'Ime je obavezno (1–20 karaktera).' : 'Ime mora imati 1–20 karaktera.');
+                return;
+            }
+            clearNameError();
+            localStorage.setItem('userName', name);
+            displayGreeting(name);
+            showSaveSuccessMessage();
+        };
+
+        const clearInputAndError = () => {
+            hideSaveSuccessMessage();
+            if (nameInput) nameInput.value = '';
+            clearNameError();
+            updateNameCounter();
+        };
+
+        const closeBanner = () => {
+            if (banner) banner.classList.add('hidden');
+            try { localStorage.setItem('bannerDismissed', 'true'); } catch (e) {}
+        };
+
         updateNameCounter();
         const savedName = localStorage.getItem('userName');
         if (savedName) {
@@ -236,7 +304,11 @@
         }
         updateSaveButtonState();
 
-        const updateThemeToggleButton = (theme) => {
+        if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
+            banner.classList.add('hidden');
+        }
+
+        const updateAriaLabel = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
             button.setAttribute('aria-label', label);
             button.textContent = label;
@@ -265,6 +337,15 @@
 
         if (nameInput) {
             nameInput.addEventListener('input', updateNameCounter);
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSave();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    clearInputAndError();
+                }
+            });
         }
 
         if (saveBtn) {
