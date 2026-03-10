@@ -329,7 +329,7 @@
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
         updateAriaLabel(initialTheme);
 
-        button.addEventListener('click', () => {
+        const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
 
@@ -344,6 +344,15 @@
             const saved = storage.set('theme', newTheme);
             if (!saved) {
                 showStorageMessage();
+            }
+        };
+
+        button.addEventListener('click', toggleTheme);
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleTheme();
             }
         });
 
