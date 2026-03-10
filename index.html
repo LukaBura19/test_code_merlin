@@ -116,6 +116,15 @@
         .char-counter.warning {
             color: #d9534f;
         }
+
+        @keyframes greetingFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #greeting.greeting-fade-in {
+            animation: greetingFadeIn 0.3s ease forwards;
+        }
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
@@ -209,9 +218,15 @@
             updateSaveButtonState();
         };
 
-        const displayGreeting = (name) => {
+        const displayGreeting = (name, animate = false) => {
             if (!greeting) return;
             greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
+            if (animate && name) {
+                greeting.classList.remove('greeting-fade-in');
+                void greeting.offsetWidth; /* force reflow to retrigger animation */
+                greeting.classList.add('greeting-fade-in');
+                greeting.addEventListener('animationend', () => greeting.classList.remove('greeting-fade-in'), { once: true });
+            }
         };
 
         updateNameCounter();
@@ -258,7 +273,7 @@
                 const name = nameInput?.value?.trim() || '';
                 if (!isValidNameLength(name.length)) return;
                 localStorage.setItem('userName', name);
-                displayGreeting(name);
+                displayGreeting(name, true);
             });
         }
     </script>
