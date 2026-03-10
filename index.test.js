@@ -228,6 +228,35 @@ describe('Code Merlin Landing Page', () => {
     });
   });
 
+  describe('SCRUM-20: Auto-trim and format name on save', () => {
+    it('should save "Marko" when entering " marko " (trim + format)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+
+      nameInput.value = ' marko ';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('userName', 'Marko');
+      expect(document.getElementById('greeting').textContent).toBe('Dobrodošli, Marko!');
+      expect(nameInput.value).toBe('Marko');
+    });
+
+    it('should show error and save nothing when entering only spaces', () => {
+      const nameInput = document.getElementById('nameInput');
+      const nameError = document.getElementById('nameError');
+      const saveBtn = document.getElementById('saveBtn');
+
+      nameInput.value = '   ';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(nameError.textContent).toContain('Ime ne može biti prazno');
+      const userNameCalls = window.localStorage.setItem.mock.calls.filter((c) => c[0] === 'userName');
+      expect(userNameCalls.length).toBe(0);
+    });
+  });
+
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
     it('should show "Name has been saved successfully." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
@@ -980,7 +1009,7 @@ describe('Code Merlin Landing Page', () => {
 
       nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-      expect(nameError.textContent).toContain('Ime je obavezno');
+      expect(nameError.textContent).toContain('Ime ne može biti prazno');
       expect(nameInput.getAttribute('aria-invalid')).toBe('true');
     });
 
