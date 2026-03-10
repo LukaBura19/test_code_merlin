@@ -117,45 +117,13 @@
             color: #d9534f;
         }
 
-        .name-error {
-            color: #d9534f;
-            font-size: 12px;
-            margin-top: 4px;
-            min-height: 18px;
+        @keyframes greetingFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .save-success-message {
-            font-size: 14px;
-            color: #28a745;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-
-        .save-success-message.hidden {
-            display: none;
-        }
-
-        .banner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 12px 16px;
-            background: var(--btn-bg);
-            border-bottom: 1px solid var(--btn-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .banner.hidden {
-            display: none;
-        }
-
-        .banner-close-btn {
-            padding: 4px 10px;
-            min-width: auto;
+        #greeting.greeting-fade-in {
+            animation: greetingFadeIn 0.3s ease forwards;
         }
     </style>
 
@@ -274,9 +242,15 @@
             updateSaveButtonState();
         };
 
-        const displayGreeting = (name) => {
+        const displayGreeting = (name, animate = false) => {
             if (!greeting) return;
             greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
+            if (animate && name) {
+                greeting.classList.remove('greeting-fade-in');
+                void greeting.offsetWidth; /* force reflow to retrigger animation */
+                greeting.classList.add('greeting-fade-in');
+                greeting.addEventListener('animationend', () => greeting.classList.remove('greeting-fade-in'), { once: true });
+            }
         };
 
         const hideSaveSuccessMessage = () => {
@@ -387,16 +361,12 @@
         }
 
         if (saveBtn) {
-            saveBtn.addEventListener('click', performSave);
-        }
-
-        if (bannerCloseBtn) {
-            bannerCloseBtn.addEventListener('click', closeBanner);
-            bannerCloseBtn.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    closeBanner();
-                }
+            saveBtn.addEventListener('click', () => {
+                if (saveBtn.disabled) return;
+                const name = nameInput?.value?.trim() || '';
+                if (!isValidNameLength(name.length)) return;
+                localStorage.setItem('userName', name);
+                displayGreeting(name, true);
             });
         }
     </script>

@@ -134,6 +134,44 @@ describe('Code Merlin Landing Page', () => {
     expect(nameCounter.classList.contains('warning')).toBe(true);
   });
 
+  describe('SCRUM-21: Greeting fade-in animation', () => {
+    it('should apply greeting-fade-in class after saving a name', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+      expect(greeting.classList.contains('greeting-fade-in')).toBe(true);
+    });
+
+    it('should not affect greeting functionality - greeting still updates correctly', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Petar';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(greeting.textContent).toBe('Dobrodošli, Petar!');
+
+      nameInput.value = 'Jelena';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(greeting.textContent).toBe('Dobrodošli, Jelena!');
+    });
+
+    it('should not apply animation on initial page load with saved name', () => {
+      setupDOM({ userName: 'Marko' });
+      const greeting = document.getElementById('greeting');
+      expect(greeting.textContent).toBe('Dobrodošli, Marko!');
+      expect(greeting.classList.contains('greeting-fade-in')).toBe(false);
+    });
+  });
+
   describe('SCRUM-16: Save button validation', () => {
     it('should have saveBtn disabled initially when input is empty', () => {
       const saveBtn = document.getElementById('saveBtn');
