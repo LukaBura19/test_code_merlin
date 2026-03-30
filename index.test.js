@@ -24,8 +24,9 @@ describe('Code Merlin Landing Page', () => {
       beforeParse: (win) => {
         Object.defineProperty(win, 'localStorage', {
           value: {
-            getItem: vi.fn((key) => localStorageStore[key] || null),
+            getItem: vi.fn((key) => localStorageStore[key] ?? null),
             setItem: setItemImpl,
+            removeItem: vi.fn((key) => { delete localStorageStore[key]; }),
             clear: vi.fn(() => { localStorageStore = {}; })
           },
           writable: true
@@ -107,6 +108,60 @@ describe('Code Merlin Landing Page', () => {
 
     expect(storageMessage.classList.contains('hidden')).toBe(false);
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
+  });
+
+  describe('Reset theme button', () => {
+    it('exposes a visible, clickable reset control next to theme toggle', () => {
+      const resetBtn = document.getElementById('themeResetBtn');
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(resetBtn).not.toBeNull();
+      expect(resetBtn.textContent.trim().length).toBeGreaterThan(0);
+      expect(resetBtn.getAttribute('type')).toBe('button');
+      expect(resetBtn.getAttribute('aria-label')).toBeTruthy();
+      expect(resetBtn.getAttribute('title')).toBeTruthy();
+      expect(themeToggle.nextElementSibling).toBe(resetBtn);
+    });
+
+    it('removes persisted theme, applies system default immediately, and stays default after reload', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const resetBtn = document.getElementById('themeResetBtn');
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+
+      resetBtn.click();
+
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(window.localStorage.removeItem).toHaveBeenCalledWith('theme');
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(themeToggle.getAttribute('aria-pressed')).toBe('false');
+
+      setupDOM(localStorageStore, false);
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('after reset follows system dark preference when no theme is stored', () => {
+      setupDOM({ theme: 'light' }, true);
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+
+      document.getElementById('themeResetBtn').click();
+
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      expect(document.getElementById('themeToggle').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('keeps theme toggle labels in sync after reset', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const themeToggle = document.getElementById('themeToggle');
+
+      document.getElementById('themeResetBtn').click();
+
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+      expect(themeToggle.textContent).toBe('Prebaci na tamnu temu');
+    });
   });
 
   describe('SCRUM-19: Global keyboard shortcut for theme switching', () => {

@@ -70,6 +70,19 @@
             gap: 16px;
         }
 
+        .theme-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-reset-btn {
+            font-size: 14px;
+            padding: 8px 14px;
+        }
+
         .storage-message {
             display: flex;
             align-items: center;
@@ -153,7 +166,12 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle" type="button"></button>
+        <div class="theme-controls" role="group" aria-label="Kontrole teme">
+            <button id="themeToggle" type="button"></button>
+            <button id="themeResetBtn" type="button" class="theme-reset-btn"
+                aria-label="Vrati podrazumevanu temu"
+                title="Vrati podrazumevanu temu (prati sistemsko podešavanje)">Vrati temu</button>
+        </div>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -172,6 +190,7 @@
 
     <script>
         const button = document.getElementById('themeToggle');
+        const themeResetBtn = document.getElementById('themeResetBtn');
         const storageMessage = document.getElementById('storageMessage');
         const dismissBtn = storageMessage.querySelector('.dismiss-btn');
 
@@ -293,7 +312,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name);
+            displayGreeting(name, true);
             showSaveSuccessMessage();
         };
 
@@ -337,7 +356,26 @@
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggleButton(initialTheme);
+
+        const applyDefaultThemeFromSystem = () => {
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (systemPrefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            updateThemeToggleButton(systemPrefersDark ? 'dark' : 'light');
+        };
+
+        const resetTheme = () => {
+            try {
+                localStorage.removeItem('theme');
+            } catch (e) {
+                console.warn('Could not clear theme from localStorage', e);
+            }
+            applyDefaultThemeFromSystem();
+        };
 
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -349,7 +387,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggleButton(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {
@@ -358,6 +396,7 @@
         };
 
         button.addEventListener('click', toggleTheme);
+        themeResetBtn.addEventListener('click', resetTheme);
 
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
