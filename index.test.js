@@ -198,6 +198,82 @@ describe('Code Merlin Landing Page', () => {
 
       expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     });
+
+    it('should not toggle theme when pressing t inside a textarea', () => {
+      const docEl = document.documentElement;
+      const textarea = document.createElement('textarea');
+      textarea.id = 'testNotes';
+      document.body.appendChild(textarea);
+      textarea.focus();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 't',
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('should toggle theme when pressing t while focus is on a checkbox', () => {
+      const docEl = document.documentElement;
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      document.body.appendChild(checkbox);
+      checkbox.focus();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 't',
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+    });
+  });
+
+  describe('SCRUM-25: Storage message dismiss persistence', () => {
+    it('hides storage message on dismiss and sets storageMessageDismissed in localStorage', () => {
+      setupDOM();
+      const storageMessage = document.getElementById('storageMessage');
+      const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+
+      storageMessage.classList.remove('hidden');
+      dismissBtn.click();
+
+      expect(storageMessage.classList.contains('hidden')).toBe(true);
+      expect(localStorageStore.storageMessageDismissed).toBe('true');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('storageMessageDismissed', 'true');
+    });
+
+    it('keeps storage message hidden on load when storageMessageDismissed is already set', () => {
+      setupDOM({ storageMessageDismissed: 'true' });
+      const storageMessage = document.getElementById('storageMessage');
+      expect(storageMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('stays hidden after reload when user dismissed and theme save still fails', () => {
+      setupDOM();
+      const storageMessage = document.getElementById('storageMessage');
+      const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+      storageMessage.classList.remove('hidden');
+      dismissBtn.click();
+      expect(localStorageStore.storageMessageDismissed).toBe('true');
+
+      setupDOM(localStorageStore, false, true);
+      const reloaded = document.getElementById('storageMessage');
+      document.getElementById('themeToggle').click();
+      expect(reloaded.classList.contains('hidden')).toBe(true);
+    });
+
+    it('shows storage message again after dismiss flag is cleared when theme cannot be saved', () => {
+      const store = { storageMessageDismissed: 'true' };
+      setupDOM(store, false, true);
+      delete store.storageMessageDismissed;
+      setupDOM(store, false, true);
+
+      document.getElementById('themeToggle').click();
+      const storageMessage = document.getElementById('storageMessage');
+      expect(storageMessage.classList.contains('hidden')).toBe(false);
+    });
   });
 
   it('should show initial name character counter as 0/20', () => {
