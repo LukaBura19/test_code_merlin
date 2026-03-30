@@ -174,8 +174,16 @@
         const button = document.getElementById('themeToggle');
         const storageMessage = document.getElementById('storageMessage');
         const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+        const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
 
         const storage = {
+            get: (key) => {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            },
             set: (key, value) => {
                 try {
                     localStorage.setItem(key, value);
@@ -187,7 +195,13 @@
             }
         };
 
+        const isStorageMessageDismissed = () => storage.get(STORAGE_MESSAGE_DISMISSED_KEY) === 'true';
+
         const showStorageMessage = () => {
+            if (isStorageMessageDismissed()) {
+                hideStorageMessage();
+                return;
+            }
             storageMessage.classList.remove('hidden');
         };
 
@@ -195,7 +209,10 @@
             storageMessage.classList.add('hidden');
         };
 
-        dismissBtn.addEventListener('click', hideStorageMessage);
+        dismissBtn.addEventListener('click', () => {
+            hideStorageMessage();
+            storage.set(STORAGE_MESSAGE_DISMISSED_KEY, 'true');
+        });
 
         const nameInput = document.getElementById('nameInput');
         const nameCounter = document.getElementById('nameCounter');
@@ -318,6 +335,9 @@
 
         if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
             banner.classList.add('hidden');
+        }
+        if (isStorageMessageDismissed()) {
+            hideStorageMessage();
         }
         if (bannerCloseBtn) {
             bannerCloseBtn.addEventListener('click', closeBanner);

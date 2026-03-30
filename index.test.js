@@ -109,6 +109,26 @@ describe('Code Merlin Landing Page', () => {
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
   });
 
+  it('should persist dismissed storage message after reload', () => {
+    setupDOM();
+    const dismissBtn = document.querySelector('#storageMessage .dismiss-btn');
+    const storageMessage = document.getElementById('storageMessage');
+    const themeButton = document.getElementById('themeToggle');
+
+    storageMessage.classList.remove('hidden');
+    dismissBtn.click();
+
+    expect(storageMessage.classList.contains('hidden')).toBe(true);
+    expect(localStorageStore.storageMessageDismissed).toBe('true');
+
+    setupDOM(localStorageStore, false, true);
+    const reloadedStorageMessage = document.getElementById('storageMessage');
+    const reloadedThemeButton = document.getElementById('themeToggle');
+    reloadedThemeButton.click();
+
+    expect(reloadedStorageMessage.classList.contains('hidden')).toBe(true);
+  });
+
   describe('SCRUM-19: Global keyboard shortcut for theme switching', () => {
     it('should toggle theme when pressing Ctrl+Shift+T (same as clicking themeToggle)', () => {
       const docEl = document.documentElement;
