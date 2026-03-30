@@ -272,16 +272,28 @@
             successMessageTimeout = setTimeout(hideSaveSuccessMessage, 4000);
         };
 
+        const formatName = (str) => {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        };
+
         const performSave = () => {
             hideSaveSuccessMessage();
-            const name = nameInput?.value?.trim() || '';
+            const raw = nameInput?.value?.trim() || '';
+            const name = formatName(raw);
+            if (!name) {
+                showNameError('Ime ne može biti prazno.');
+                return;
+            }
             if (!isValidNameLength(name.length)) {
-                showNameError(name.length === 0 ? 'Ime je obavezno (1–20 karaktera).' : 'Ime mora imati 1–20 karaktera.');
+                showNameError('Ime mora imati 1–20 karaktera.');
                 return;
             }
             clearNameError();
             localStorage.setItem('userName', name);
-            displayGreeting(name, true);
+            if (nameInput) nameInput.value = name;
+            updateNameCounter();
+            displayGreeting(name);
             showSaveSuccessMessage();
         };
 
@@ -325,9 +337,9 @@
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateThemeToggleButton(initialTheme);
+        updateAriaLabel(initialTheme);
 
-        button.addEventListener('click', () => {
+        const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
 
@@ -337,11 +349,20 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateThemeToggleButton(newTheme);
+            updateAriaLabel(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {
                 showStorageMessage();
+            }
+        };
+
+        button.addEventListener('click', toggleTheme);
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleTheme();
             }
         });
 
