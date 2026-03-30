@@ -153,7 +153,7 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle"></button>
+        <button id="themeToggle" type="button"></button>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -281,7 +281,7 @@
             }
             clearNameError();
             localStorage.setItem('userName', name);
-            displayGreeting(name);
+            displayGreeting(name, true);
             showSaveSuccessMessage();
         };
 
@@ -307,10 +307,20 @@
         if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
             banner.classList.add('hidden');
         }
+        if (bannerCloseBtn) {
+            bannerCloseBtn.addEventListener('click', closeBanner);
+            bannerCloseBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    closeBanner();
+                }
+            });
+        }
 
-        const updateAriaLabel = (theme) => {
+        const updateThemeToggleButton = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
             button.setAttribute('aria-label', label);
+            button.setAttribute('aria-pressed', String(theme === 'dark'));
             button.textContent = label;
         };
 
@@ -350,11 +360,7 @@
 
         if (saveBtn) {
             saveBtn.addEventListener('click', () => {
-                if (saveBtn.disabled) return;
-                const name = nameInput?.value?.trim() || '';
-                if (!isValidNameLength(name.length)) return;
-                localStorage.setItem('userName', name);
-                displayGreeting(name, true);
+                performSave();
             });
         }
     </script>
