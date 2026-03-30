@@ -61,6 +61,7 @@ describe('Code Merlin Landing Page', () => {
     // Initial state (light)
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
 
     // Click to dark
@@ -68,6 +69,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.textContent).toBe('Prebaci na svetlu temu');
 
     // Click back to light
@@ -75,6 +77,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
   });
 
