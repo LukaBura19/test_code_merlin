@@ -11,12 +11,16 @@ describe('Code Merlin Landing Page', () => {
   let window;
   let localStorageStore = {};
 
-  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false) => {
+  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false, removeItemThrows = false) => {
     localStorageStore = { ...mockLocalStorage };
 
     const setItemImpl = setItemThrows
       ? vi.fn(() => { throw new Error('QuotaExceededError'); })
       : vi.fn((key, value) => { localStorageStore[key] = value.toString(); });
+
+    const removeItemImpl = removeItemThrows
+      ? vi.fn(() => { throw new Error('SecurityError'); })
+      : vi.fn((key) => { delete localStorageStore[key]; });
 
     dom = new JSDOM(html, {
       runScripts: 'dangerously',
@@ -24,9 +28,9 @@ describe('Code Merlin Landing Page', () => {
       beforeParse: (win) => {
         Object.defineProperty(win, 'localStorage', {
           value: {
-            getItem: vi.fn((key) => localStorageStore[key] ?? null),
+            getItem: vi.fn((key) => (key in localStorageStore ? localStorageStore[key] : null)),
             setItem: setItemImpl,
-            removeItem: vi.fn((key) => { delete localStorageStore[key]; }),
+            removeItem: removeItemImpl,
             clear: vi.fn(() => { localStorageStore = {}; })
           },
           writable: true
@@ -161,6 +165,38 @@ describe('Code Merlin Landing Page', () => {
 
       expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
       expect(themeToggle.textContent).toBe('Prebaci na tamnu temu');
+    });
+
+    it('resets theme when pressing Enter on focused reset button', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const resetBtn = document.getElementById('themeResetBtn');
+      resetBtn.focus();
+      resetBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('resets theme when pressing Space on focused reset button', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const resetBtn = document.getElementById('themeResetBtn');
+      resetBtn.focus();
+      resetBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('reset theme button is visible (not hidden via layout)', () => {
+      const resetBtn = document.getElementById('themeResetBtn');
+      const style = window.getComputedStyle(resetBtn);
+      expect(style.display).not.toBe('none');
+      expect(style.visibility).not.toBe('hidden');
+    });
+
+    it('still applies system default theme when removeItem throws', () => {
+      setupDOM({ theme: 'dark' }, false, false, true);
+      document.getElementById('themeResetBtn').click();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.removeItem).toHaveBeenCalledWith('theme');
     });
   });
 
