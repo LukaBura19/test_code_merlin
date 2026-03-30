@@ -293,7 +293,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name);
+            displayGreeting(name, true);
             showSaveSuccessMessage();
         };
 
@@ -337,7 +337,7 @@
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggleButton(initialTheme);
 
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -349,7 +349,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggleButton(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {
@@ -359,11 +359,25 @@
 
         button.addEventListener('click', toggleTheme);
 
+        const isTypingInTextEntry = () => {
+            const el = document.activeElement;
+            if (!el) return false;
+            const tag = el.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
+            return el.isContentEditable === true;
+        };
+
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
                 e.preventDefault();
                 toggleTheme();
+                return;
             }
+            if (e.key !== 't' && e.key !== 'T') return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (isTypingInTextEntry()) return;
+            e.preventDefault();
+            toggleTheme();
         });
 
         if (nameInput) {

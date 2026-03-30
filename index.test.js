@@ -167,6 +167,37 @@ describe('Code Merlin Landing Page', () => {
       expect(docEl.getAttribute('data-theme')).not.toBe('dark');
       expect(nameInput.value).toBe('T');
     });
+
+    it('should toggle theme when pressing T with focus outside text-entry elements', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const nameInput = document.getElementById('nameInput');
+
+      nameInput.blur();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    });
+
+    it('should not toggle theme when pressing T while Alt is held', () => {
+      const docEl = document.documentElement;
+      const nameInput = document.getElementById('nameInput');
+
+      nameInput.blur();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        altKey: true,
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+    });
   });
 
   it('should show initial name character counter as 0/20', () => {
