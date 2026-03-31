@@ -5,6 +5,16 @@ import path from 'path';
 
 const html = fs.readFileSync(path.resolve(__dirname, './index.html'), 'utf8');
 
+describe('SCRUM-28: :focus-visible styles', () => {
+  it('should define focus ring variables and :focus-visible rules in index.html', () => {
+    expect(html).toContain(':focus-visible');
+    expect(html).toContain('--focus-ring-color');
+    expect(html).toContain('button:focus-visible');
+    expect(html).toContain('#nameInput:focus-visible');
+    expect(html).toContain('button:focus:not(:focus-visible)');
+  });
+});
+
 describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
