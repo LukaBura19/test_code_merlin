@@ -98,6 +98,19 @@
             gap: 16px;
         }
 
+        .theme-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-reset-btn {
+            font-size: 14px;
+            padding: 8px 14px;
+        }
+
         .storage-message {
             display: flex;
             align-items: center;
@@ -214,7 +227,13 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle" type="button"></button>
+        <!-- SCRUM-27: theme reset clears saved preference and follows system default (see work item for AC). -->
+        <div class="theme-controls" role="group" aria-label="Kontrole teme">
+            <button id="themeToggle" type="button"></button>
+            <button id="themeResetBtn" type="button" class="theme-reset-btn"
+                aria-label="Vrati podrazumevanu temu"
+                title="Vrati podrazumevanu temu (prati sistemsko podešavanje)">Vrati temu</button>
+        </div>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -238,8 +257,10 @@
     </div>
 
     <script>
-        const docEl = document.documentElement;
-        const byId = (id) => document.getElementById(id);
+        const button = document.getElementById('themeToggle');
+        const themeResetBtn = document.getElementById('themeResetBtn');
+        const storageMessage = document.getElementById('storageMessage');
+        const dismissBtn = storageMessage.querySelector('.dismiss-btn');
         const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
 
         const storageMessageEl = byId('storageMessage');
@@ -277,8 +298,10 @@
         const storage = {
             get: (key) => {
                 try {
-                    return localStorage.getItem(key);
+                    const v = localStorage.getItem(key);
+                    return v ?? null;
                 } catch (e) {
+                    console.warn("Could not read from localStorage", key, e);
                     return null;
                 }
             },
@@ -288,6 +311,15 @@
                     return true;
                 } catch (e) {
                     console.warn("Could not save theme to localStorage", e);
+                    return false;
+                }
+            },
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.warn("Could not remove from localStorage", key, e);
                     return false;
                 }
             }
@@ -314,6 +346,7 @@
 
         let successMessageTimeout = null;
         const NAME_MAX_LENGTH = 20;
+        const GREETING_USE_SAVE_ANIMATION = true;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
 
@@ -409,7 +442,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name, true);
+            displayGreeting(name, GREETING_USE_SAVE_ANIMATION);
             showSaveSuccessMessage();
         };
 
@@ -453,28 +486,44 @@
             themeToggle.textContent = label;
         };
 
-        const initialTheme = docEl.getAttribute('data-theme') || 'light';
-        updateThemeToggleButton(initialTheme);
-
-        const toggleTheme = () => {
-            const isDark = docEl.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-
-            if (newTheme === 'dark') {
-                docEl.setAttribute('data-theme', 'dark');
+        const setTheme = (theme, persist) => {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
             } else {
                 docEl.removeAttribute('data-theme');
             }
-
-            updateThemeToggleButton(newTheme);
-
-            const saved = storage.set('theme', newTheme);
-            if (!saved) {
-                showStorageMessage();
+            updateThemeToggleButton(theme);
+            if (persist) {
+                const saved = storage.set('theme', theme);
+                if (!saved) {
+                    showStorageMessage();
+                }
             }
         };
 
-        themeToggle.addEventListener('click', toggleTheme);
+        const initialTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        setTheme(initialTheme, false);
+
+        const resetTheme = () => {
+            storage.remove('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(systemPrefersDark ? 'dark' : 'light', false);
+        };
+
+        const toggleTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            setTheme(newTheme, true);
+        };
+
+        button.addEventListener('click', toggleTheme);
+        themeResetBtn.addEventListener('click', resetTheme);
+        themeResetBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                resetTheme();
+            }
+        });
 
         const NON_TEXT_INPUT_TYPES = new Set([
             'button', 'checkbox', 'color', 'file', 'hidden', 'image',
