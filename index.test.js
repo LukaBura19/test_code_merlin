@@ -90,6 +90,36 @@ describe('Code Merlin Landing Page', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
+  describe('SCRUM-30: theme persistence read/write flow', () => {
+    it('should apply persisted dark theme on init and write light on toggle', () => {
+      setupDOM({ theme: 'dark' });
+      const button = document.getElementById('themeToggle');
+      const docEl = document.documentElement;
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(button.getAttribute('aria-pressed')).toBe('true');
+
+      button.click();
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+    });
+
+    it('should prefer persisted light over system dark and write dark on toggle', () => {
+      setupDOM({ theme: 'light' }, true);
+      const button = document.getElementById('themeToggle');
+      const docEl = document.documentElement;
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(button.getAttribute('aria-pressed')).toBe('false');
+
+      button.click();
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+    });
+  });
+
   it('should fallback to system theme preference if localStorage is empty', () => {
     setupDOM({}, true); // No localStorage, but system prefers dark
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
