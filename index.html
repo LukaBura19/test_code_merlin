@@ -213,8 +213,16 @@
         const button = document.getElementById('themeToggle');
         const storageMessage = document.getElementById('storageMessage');
         const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+        const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
 
         const storage = {
+            get: (key) => {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            },
             set: (key, value) => {
                 try {
                     localStorage.setItem(key, value);
@@ -226,15 +234,24 @@
             }
         };
 
-        const showStorageMessage = () => {
-            storageMessage.classList.remove('hidden');
-        };
+        const isStorageMessageDismissed = () => storage.get(STORAGE_MESSAGE_DISMISSED_KEY) === 'true';
 
         const hideStorageMessage = () => {
             storageMessage.classList.add('hidden');
         };
 
-        dismissBtn.addEventListener('click', hideStorageMessage);
+        const showStorageMessage = () => {
+            if (isStorageMessageDismissed()) {
+                hideStorageMessage();
+                return;
+            }
+            storageMessage.classList.remove('hidden');
+        };
+
+        dismissBtn.addEventListener('click', () => {
+            hideStorageMessage();
+            storage.set(STORAGE_MESSAGE_DISMISSED_KEY, 'true');
+        });
 
         const nameInput = document.getElementById('nameInput');
         const nameCounter = document.getElementById('nameCounter');
@@ -366,6 +383,9 @@
         if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
             banner.classList.add('hidden');
         }
+        if (isStorageMessageDismissed()) {
+            hideStorageMessage();
+        }
         if (bannerCloseBtn) {
             bannerCloseBtn.addEventListener('click', closeBanner);
             bannerCloseBtn.addEventListener('keydown', (e) => {
@@ -406,11 +426,35 @@
 
         button.addEventListener('click', toggleTheme);
 
+        const NON_TEXT_INPUT_TYPES = new Set([
+            'button', 'checkbox', 'color', 'file', 'hidden', 'image',
+            'radio', 'range', 'reset', 'submit'
+        ]);
+
+        const isTypingInTextEntry = () => {
+            const el = document.activeElement;
+            if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+            if (el.isContentEditable) return true;
+            const tag = el.tagName;
+            if (tag === 'TEXTAREA') return true;
+            if (tag === 'INPUT') {
+                const type = (el.getAttribute('type') || 'text').toLowerCase();
+                return !NON_TEXT_INPUT_TYPES.has(type);
+            }
+            return false;
+        };
+
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
                 e.preventDefault();
                 toggleTheme();
+                return;
             }
+            if (e.key.toLowerCase() !== 't') return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (isTypingInTextEntry()) return;
+            e.preventDefault();
+            toggleTheme();
         });
 
         if (nameInput) {
