@@ -82,8 +82,41 @@
             max-width: 400px;
         }
 
+        .hidden {
+            display: none;
+        }
+
         .storage-message.hidden {
             display: none;
+        }
+
+        .content-area {
+            width: 100%;
+            max-width: 400px;
+            min-height: 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .content-empty-state {
+            text-align: center;
+            padding: 8px 12px;
+        }
+
+        .content-empty-state__title {
+            margin: 0 0 6px;
+            font-size: 15px;
+            font-weight: normal;
+            opacity: 0.85;
+        }
+
+        .content-empty-state__hint {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.6;
         }
 
         .storage-message .dismiss-btn {
@@ -167,7 +200,13 @@
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
             <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
-        <p id="greeting" aria-live="polite"></p>
+        <div id="contentArea" class="content-area">
+            <div id="contentEmptyState" class="content-empty-state" role="status">
+                <p class="content-empty-state__title">No data yet</p>
+                <p class="content-empty-state__hint">Save your name to see a greeting.</p>
+            </div>
+            <p id="greeting" class="hidden" aria-live="polite"></p>
+        </div>
     </div>
 
     <script>
@@ -220,6 +259,7 @@
         const saveBtn = document.getElementById('saveBtn');
         const saveSuccessMessage = document.getElementById('saveSuccessMessage');
         const greeting = document.getElementById('greeting');
+        const contentEmptyState = document.getElementById('contentEmptyState');
         let successMessageTimeout = null;
         const banner = document.getElementById('banner');
         const bannerCloseBtn = document.getElementById('bannerCloseBtn');
@@ -261,8 +301,17 @@
 
         const displayGreeting = (name, animate = false) => {
             if (!greeting) return;
-            greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
-            if (animate && name) {
+            const trimmed = name ? String(name).trim() : '';
+            const hasContent = Boolean(trimmed);
+            greeting.textContent = hasContent ? `Dobrodošli, ${trimmed}!` : '';
+            if (hasContent) {
+                greeting.classList.remove('hidden');
+                if (contentEmptyState) contentEmptyState.classList.add('hidden');
+            } else {
+                greeting.classList.add('hidden');
+                if (contentEmptyState) contentEmptyState.classList.remove('hidden');
+            }
+            if (animate && hasContent) {
                 greeting.classList.remove('greeting-fade-in');
                 void greeting.offsetWidth; /* force reflow to retrigger animation */
                 greeting.classList.add('greeting-fade-in');
@@ -310,7 +359,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name);
+            displayGreeting(name, true);
             showSaveSuccessMessage();
         };
 
@@ -328,9 +377,7 @@
 
         updateNameCounter();
         const savedName = localStorage.getItem('userName');
-        if (savedName) {
-            displayGreeting(savedName);
-        }
+        displayGreeting(savedName || '', false);
         updateSaveButtonState();
 
         if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
@@ -357,7 +404,7 @@
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggleButton(initialTheme);
 
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -369,7 +416,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggleButton(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {
@@ -379,11 +426,35 @@
 
         button.addEventListener('click', toggleTheme);
 
+        const NON_TEXT_INPUT_TYPES = new Set([
+            'button', 'checkbox', 'color', 'file', 'hidden', 'image',
+            'radio', 'range', 'reset', 'submit'
+        ]);
+
+        const isTypingInTextEntry = () => {
+            const el = document.activeElement;
+            if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+            if (el.isContentEditable) return true;
+            const tag = el.tagName;
+            if (tag === 'TEXTAREA') return true;
+            if (tag === 'INPUT') {
+                const type = (el.getAttribute('type') || 'text').toLowerCase();
+                return !NON_TEXT_INPUT_TYPES.has(type);
+            }
+            return false;
+        };
+
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
                 e.preventDefault();
                 toggleTheme();
+                return;
             }
+            if (e.key.toLowerCase() !== 't') return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (isTypingInTextEntry()) return;
+            e.preventDefault();
+            toggleTheme();
         });
 
         if (nameInput) {
