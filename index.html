@@ -374,14 +374,18 @@
             banner.classList.add('hidden');
         }
 
-        const updateAriaLabel = (theme) => {
-            const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+        const getThemeToggleLabel = (theme) =>
+            theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+
+        const updateThemeToggle = (theme) => {
+            const label = getThemeToggleLabel(theme);
             button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
             button.textContent = label;
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggle(initialTheme);
 
         button.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -393,7 +397,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggle(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {

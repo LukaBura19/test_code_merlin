@@ -64,13 +64,14 @@ describe('Code Merlin Landing Page', () => {
     expect(document.title).toBe('Code Merlin Aplikacija');
   });
 
-  it('should toggle theme on button click and update aria-label and visible text', () => {
+  it('should toggle theme on button click and update aria-label, title, and visible text', () => {
     const button = document.getElementById('themeToggle');
     const docEl = document.documentElement;
 
     // Initial state (light)
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.getAttribute('title')).toBe('Prebaci na tamnu temu');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
 
     // Click to dark
@@ -78,6 +79,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    expect(button.getAttribute('title')).toBe('Prebaci na svetlu temu');
     expect(button.textContent).toBe('Prebaci na svetlu temu');
 
     // Click back to light
@@ -85,6 +87,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    expect(button.getAttribute('title')).toBe('Prebaci na tamnu temu');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
   });
 
@@ -93,8 +96,11 @@ describe('Code Merlin Landing Page', () => {
     // Since JSDOM runs scripts on creation, we use a fresh instance
     const localStore = { theme: 'dark' };
     setupDOM(localStore);
-    
+
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    const button = document.getElementById('themeToggle');
+    expect(button.getAttribute('title')).toBe('Prebaci na svetlu temu');
+    expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
   });
 
   it('should fallback to system theme preference if localStorage is empty', () => {
