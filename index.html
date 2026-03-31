@@ -264,16 +264,16 @@
 
         const isStorageMessageDismissed = () => storage.get(STORAGE_MESSAGE_DISMISSED_KEY) === 'true';
 
-        const hideStorageMessage = () => {
-            storageMessage.classList.add('hidden');
-        };
-
         const showStorageMessage = () => {
             if (isStorageMessageDismissed()) {
                 hideStorageMessage();
                 return;
             }
             storageMessage.classList.remove('hidden');
+        };
+
+        const hideStorageMessage = () => {
+            storageMessage.classList.add('hidden');
         };
 
         dismissBtn.addEventListener('click', () => {

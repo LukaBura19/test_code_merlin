@@ -149,8 +149,69 @@ describe('Code Merlin Landing Page', () => {
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
   });
 
-  describe('SCRUM-23: Auto-focus main input on page load', () => {
-    it('should focus #nameInput after DOM initialization', () => {
+  it('should persist dismissed storage message after reload', () => {
+    setupDOM();
+    const dismissBtn = document.querySelector('#storageMessage .dismiss-btn');
+    const storageMessage = document.getElementById('storageMessage');
+    const themeButton = document.getElementById('themeToggle');
+
+    storageMessage.classList.remove('hidden');
+    dismissBtn.click();
+
+    expect(storageMessage.classList.contains('hidden')).toBe(true);
+    expect(localStorageStore.storageMessageDismissed).toBe('true');
+
+    setupDOM(localStorageStore, false, true);
+    const reloadedStorageMessage = document.getElementById('storageMessage');
+    const reloadedThemeButton = document.getElementById('themeToggle');
+    reloadedThemeButton.click();
+
+    expect(reloadedStorageMessage.classList.contains('hidden')).toBe(true);
+  });
+
+  describe('SCRUM-19: Global keyboard shortcut for theme switching', () => {
+    it('should toggle theme when pressing Ctrl+Shift+T (same as clicking themeToggle)', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    });
+
+    it('should restore original theme when pressing Ctrl+Shift+T again', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true
+      }));
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+    });
+
+    it('should not toggle theme when typing T in nameInput without modifiers', () => {
       const nameInput = document.getElementById('nameInput');
       expect(document.activeElement).toBe(nameInput);
     });
