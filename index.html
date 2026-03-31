@@ -13,6 +13,10 @@
             --btn-bg: #f0f0f0;
             --btn-border: #ccc;
             --transition-speed: 0.3s;
+            /* SCRUM-28: keyboard focus ring (WCAG-friendly contrast) */
+            --focus-ring-color: #0b57d0;
+            --focus-ring-width: 2px;
+            --focus-ring-offset: 2px;
         }
 
         /* Dark mode theme scoped to data-theme attribute */
@@ -21,6 +25,7 @@
             --text-color: #ffffff;
             --btn-bg: #333;
             --btn-border: #555;
+            --focus-ring-color: #8ab4f8;
         }
 
         body {
@@ -61,6 +66,29 @@
         button:disabled:hover {
             opacity: 0.5;
             transform: none;
+        }
+
+        /* SCRUM-28: visible focus for keyboard only (:focus-visible) */
+        button:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        button:focus-visible {
+            outline: var(--focus-ring-width) solid var(--focus-ring-color);
+            outline-offset: var(--focus-ring-offset);
+        }
+
+        button:disabled:focus-visible {
+            outline: none;
+        }
+
+        #nameInput:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        #nameInput:focus-visible {
+            outline: var(--focus-ring-width) solid var(--focus-ring-color);
+            outline-offset: var(--focus-ring-offset);
         }
 
         .container {
