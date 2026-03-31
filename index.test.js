@@ -265,6 +265,44 @@ describe('Code Merlin Landing Page', () => {
     });
   });
 
+  describe('SCRUM-29: basic empty-state message', () => {
+    it('should show empty state and hide greeting when there is no saved name', () => {
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      expect(emptyState.classList.contains('hidden')).toBe(false);
+      expect(emptyState.textContent).toContain('No data yet');
+      expect(emptyState.textContent).toContain('Save your name');
+      expect(greeting.classList.contains('hidden')).toBe(true);
+      expect(greeting.textContent).toBe('');
+    });
+
+    it('should hide empty state and show greeting when a name is saved', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(emptyState.classList.contains('hidden')).toBe(true);
+      expect(greeting.classList.contains('hidden')).toBe(false);
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+    });
+
+    it('should hide empty state on load when userName exists in localStorage', () => {
+      setupDOM({ userName: 'Luka' });
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      expect(emptyState.classList.contains('hidden')).toBe(true);
+      expect(greeting.classList.contains('hidden')).toBe(false);
+      expect(greeting.textContent).toBe('Dobrodošli, Luka!');
+    });
+  });
+
   describe('SCRUM-16: Save button validation', () => {
     it('should have saveBtn disabled initially when input is empty', () => {
       const saveBtn = document.getElementById('saveBtn');
