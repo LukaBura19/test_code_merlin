@@ -238,10 +238,41 @@
     </div>
 
     <script>
-        const button = document.getElementById('themeToggle');
-        const storageMessage = document.getElementById('storageMessage');
-        const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+        const docEl = document.documentElement;
+        const byId = (id) => document.getElementById(id);
         const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
+
+        const storageMessageEl = byId('storageMessage');
+        const refs = {
+            docEl,
+            themeToggle: byId('themeToggle'),
+            storageMessage: storageMessageEl,
+            dismissBtn: storageMessageEl.querySelector('.dismiss-btn'),
+            nameInput: byId('nameInput'),
+            nameCounter: byId('nameCounter'),
+            nameError: byId('nameError'),
+            saveBtn: byId('saveBtn'),
+            saveSuccessMessage: byId('saveSuccessMessage'),
+            greeting: byId('greeting'),
+            contentEmptyState: byId('contentEmptyState'),
+            banner: byId('banner'),
+            bannerCloseBtn: byId('bannerCloseBtn'),
+        };
+
+        const {
+            themeToggle,
+            storageMessage,
+            dismissBtn,
+            nameInput,
+            nameCounter,
+            nameError,
+            saveBtn,
+            saveSuccessMessage,
+            greeting,
+            contentEmptyState,
+            banner,
+            bannerCloseBtn,
+        } = refs;
 
         const storage = {
             get: (key) => {
@@ -281,16 +312,7 @@
             storage.set(STORAGE_MESSAGE_DISMISSED_KEY, 'true');
         });
 
-        const nameInput = document.getElementById('nameInput');
-        const nameCounter = document.getElementById('nameCounter');
-        const nameError = document.getElementById('nameError');
-        const saveBtn = document.getElementById('saveBtn');
-        const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-        const greeting = document.getElementById('greeting');
-        const contentEmptyState = document.getElementById('contentEmptyState');
         let successMessageTimeout = null;
-        const banner = document.getElementById('banner');
-        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const NAME_MAX_LENGTH = 20;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
@@ -426,22 +448,22 @@
 
         const updateThemeToggleButton = (theme) => {
             const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
-            button.setAttribute('aria-label', label);
-            button.setAttribute('aria-pressed', String(theme === 'dark'));
-            button.textContent = label;
+            themeToggle.setAttribute('aria-label', label);
+            themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+            themeToggle.textContent = label;
         };
 
-        const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const initialTheme = docEl.getAttribute('data-theme') || 'light';
         updateThemeToggleButton(initialTheme);
 
         const toggleTheme = () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const isDark = docEl.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
 
             if (newTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                docEl.setAttribute('data-theme', 'dark');
             } else {
-                document.documentElement.removeAttribute('data-theme');
+                docEl.removeAttribute('data-theme');
             }
 
             updateThemeToggleButton(newTheme);
@@ -452,7 +474,7 @@
             }
         };
 
-        button.addEventListener('click', toggleTheme);
+        themeToggle.addEventListener('click', toggleTheme);
 
         const NON_TEXT_INPUT_TYPES = new Set([
             'button', 'checkbox', 'color', 'file', 'hidden', 'image',
