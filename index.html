@@ -479,27 +479,18 @@
             });
         }
 
-        const updateThemeToggleButton = (theme) => {
-            const label = theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
-            themeToggle.setAttribute('aria-label', label);
-            themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
-            themeToggle.textContent = label;
+        const getThemeToggleLabel = (theme) =>
+            theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+
+        const updateThemeToggle = (theme) => {
+            const label = getThemeToggleLabel(theme);
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+            button.textContent = label;
         };
 
-        const setTheme = (theme, persist) => {
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                docEl.removeAttribute('data-theme');
-            }
-            updateThemeToggleButton(theme);
-            if (persist) {
-                const saved = storage.set('theme', theme);
-                if (!saved) {
-                    showStorageMessage();
-                }
-            }
-        };
+        const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateThemeToggle(initialTheme);
 
         const initialTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
         setTheme(initialTheme, false);
@@ -525,23 +516,7 @@
             }
         });
 
-        const NON_TEXT_INPUT_TYPES = new Set([
-            'button', 'checkbox', 'color', 'file', 'hidden', 'image',
-            'radio', 'range', 'reset', 'submit'
-        ]);
-
-        const isTypingInTextEntry = () => {
-            const el = document.activeElement;
-            if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
-            if (el.isContentEditable) return true;
-            const tag = el.tagName;
-            if (tag === 'TEXTAREA') return true;
-            if (tag === 'INPUT') {
-                const type = (el.getAttribute('type') || 'text').toLowerCase();
-                return !NON_TEXT_INPUT_TYPES.has(type);
-            }
-            return false;
-        };
+            updateThemeToggle(newTheme);
 
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
