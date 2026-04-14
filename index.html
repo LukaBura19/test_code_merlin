@@ -82,6 +82,16 @@
             outline: none;
         }
 
+        /* SCRUM-34: stronger keyboard focus on theme toggle (both themes via --focus-ring-color) */
+        #themeToggle:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        #themeToggle:focus-visible {
+            outline: 3px solid var(--focus-ring-color);
+            outline-offset: 3px;
+        }
+
         #nameInput:focus:not(:focus-visible) {
             outline: none;
         }
@@ -321,7 +331,7 @@
         const showSaveSuccessMessage = () => {
             hideSaveSuccessMessage();
             if (!saveSuccessMessage) return;
-            saveSuccessMessage.textContent = 'Name has been saved successfully.';
+            saveSuccessMessage.textContent = 'Ime je uspešno sačuvano.';
             saveSuccessMessage.classList.remove('hidden');
             successMessageTimeout = setTimeout(hideSaveSuccessMessage, 4000);
         };
