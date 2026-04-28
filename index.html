@@ -70,6 +70,32 @@
             gap: 16px;
         }
 
+        .theme-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .theme-shortcut-hint {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.35;
+            opacity: 0.82;
+            text-align: center;
+            max-width: 280px;
+        }
+
+        .theme-shortcut-hint kbd {
+            font-family: inherit;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--text-color);
+        }
+
         .storage-message {
             display: flex;
             align-items: center;
@@ -153,7 +179,12 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle" type="button"></button>
+        <div class="theme-row">
+            <button id="themeToggle" type="button" aria-keyshortcuts="Control+Shift+T"></button>
+            <p id="themeShortcutHint" class="theme-shortcut-hint">
+                Prečica: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>
+            </p>
+        </div>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -293,7 +324,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name);
+            displayGreeting(name, true);
             showSaveSuccessMessage();
         };
 
@@ -337,7 +368,7 @@
         };
 
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateAriaLabel(initialTheme);
+        updateThemeToggleButton(initialTheme);
 
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -349,7 +380,7 @@
                 document.documentElement.removeAttribute('data-theme');
             }
 
-            updateAriaLabel(newTheme);
+            updateThemeToggleButton(newTheme);
 
             const saved = storage.set('theme', newTheme);
             if (!saved) {
