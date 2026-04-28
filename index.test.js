@@ -5,18 +5,32 @@ import path from 'path';
 
 const html = fs.readFileSync(path.resolve(__dirname, './index.html'), 'utf8');
 
+describe('SCRUM-28: :focus-visible styles', () => {
+  it('should define focus ring variables and :focus-visible rules in index.html', () => {
+    expect(html).toContain(':focus-visible');
+    expect(html).toContain('--focus-ring-color');
+    expect(html).toContain('button:focus-visible');
+    expect(html).toContain('#nameInput:focus-visible');
+    expect(html).toContain('button:focus:not(:focus-visible)');
+  });
+});
+
 describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
   let window;
   let localStorageStore = {};
 
-  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false) => {
+  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false, removeItemThrows = false) => {
     localStorageStore = { ...mockLocalStorage };
 
     const setItemImpl = setItemThrows
       ? vi.fn(() => { throw new Error('QuotaExceededError'); })
       : vi.fn((key, value) => { localStorageStore[key] = value.toString(); });
+
+    const removeItemImpl = removeItemThrows
+      ? vi.fn(() => { throw new Error('SecurityError'); })
+      : vi.fn((key) => { delete localStorageStore[key]; });
 
     dom = new JSDOM(html, {
       runScripts: 'dangerously',
@@ -24,8 +38,9 @@ describe('Code Merlin Landing Page', () => {
       beforeParse: (win) => {
         Object.defineProperty(win, 'localStorage', {
           value: {
-            getItem: vi.fn((key) => localStorageStore[key] || null),
+            getItem: vi.fn((key) => (key in localStorageStore ? localStorageStore[key] : null)),
             setItem: setItemImpl,
+            removeItem: removeItemImpl,
             clear: vi.fn(() => { localStorageStore = {}; })
           },
           writable: true
@@ -54,14 +69,14 @@ describe('Code Merlin Landing Page', () => {
     expect(document.title).toBe('Code Merlin Aplikacija');
   });
 
-  it('should toggle theme on button click and update aria-label and visible text', () => {
+  it('should toggle theme on button click and update aria-label, title, and visible text', () => {
     const button = document.getElementById('themeToggle');
     const docEl = document.documentElement;
 
     // Initial state (light)
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('title')).toBe('Prebaci na tamnu temu');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
 
     // Click to dark
@@ -69,7 +84,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.getAttribute('title')).toBe('Prebaci na svetlu temu');
     expect(button.textContent).toBe('Prebaci na svetlu temu');
 
     // Click back to light
@@ -77,7 +92,7 @@ describe('Code Merlin Landing Page', () => {
     expect(docEl.getAttribute('data-theme')).not.toBe('dark');
     expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
     expect(button.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('title')).toBe('Prebaci na tamnu temu');
     expect(button.textContent).toBe('Prebaci na tamnu temu');
   });
 
@@ -86,8 +101,41 @@ describe('Code Merlin Landing Page', () => {
     // Since JSDOM runs scripts on creation, we use a fresh instance
     const localStore = { theme: 'dark' };
     setupDOM(localStore);
-    
+
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    const button = document.getElementById('themeToggle');
+    expect(button.getAttribute('title')).toBe('Prebaci na svetlu temu');
+    expect(button.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+  });
+
+  describe('SCRUM-30: theme persistence read/write flow', () => {
+    it('should apply persisted dark theme on init and write light on toggle', () => {
+      setupDOM({ theme: 'dark' });
+      const button = document.getElementById('themeToggle');
+      const docEl = document.documentElement;
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(button.getAttribute('aria-pressed')).toBe('true');
+
+      button.click();
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'light');
+    });
+
+    it('should prefer persisted light over system dark and write dark on toggle', () => {
+      setupDOM({ theme: 'light' }, true);
+      const button = document.getElementById('themeToggle');
+      const docEl = document.documentElement;
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(button.getAttribute('aria-pressed')).toBe('false');
+
+      button.click();
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+    });
   });
 
   it('should fallback to system theme preference if localStorage is empty', () => {
@@ -107,6 +155,92 @@ describe('Code Merlin Landing Page', () => {
 
     expect(storageMessage.classList.contains('hidden')).toBe(false);
     expect(storageMessage.textContent).toContain("Ne možemo da sačuvamo temu na ovom uređaju");
+  });
+
+  describe('Reset theme button', () => {
+    it('exposes a visible, clickable reset control next to theme toggle', () => {
+      const resetBtn = document.getElementById('themeResetBtn');
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(resetBtn).not.toBeNull();
+      expect(resetBtn.textContent.trim().length).toBeGreaterThan(0);
+      expect(resetBtn.getAttribute('type')).toBe('button');
+      expect(resetBtn.getAttribute('aria-label')).toBeTruthy();
+      expect(resetBtn.getAttribute('title')).toBeTruthy();
+      expect(themeToggle.nextElementSibling).toBe(resetBtn);
+    });
+
+    it('removes persisted theme, applies system default immediately, and stays default after reload', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const resetBtn = document.getElementById('themeResetBtn');
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+
+      resetBtn.click();
+
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(window.localStorage.removeItem).toHaveBeenCalledWith('theme');
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+      expect(themeToggle.getAttribute('aria-pressed')).toBe('false');
+
+      setupDOM(localStorageStore, false);
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('after reset follows system dark preference when no theme is stored', () => {
+      setupDOM({ theme: 'light' }, true);
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+
+      document.getElementById('themeResetBtn').click();
+
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      expect(document.getElementById('themeToggle').getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('keeps theme toggle labels in sync after reset', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const themeToggle = document.getElementById('themeToggle');
+
+      document.getElementById('themeResetBtn').click();
+
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na tamnu temu');
+      expect(themeToggle.textContent).toBe('Prebaci na tamnu temu');
+    });
+
+    it('resets theme when pressing Enter on focused reset button', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const resetBtn = document.getElementById('themeResetBtn');
+      resetBtn.focus();
+      resetBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('resets theme when pressing Space on focused reset button', () => {
+      setupDOM({ theme: 'dark' }, false);
+      const resetBtn = document.getElementById('themeResetBtn');
+      resetBtn.focus();
+      resetBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+      expect(localStorageStore.theme).toBeUndefined();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('reset theme button is visible (not hidden via layout)', () => {
+      const resetBtn = document.getElementById('themeResetBtn');
+      const style = window.getComputedStyle(resetBtn);
+      expect(style.display).not.toBe('none');
+      expect(style.visibility).not.toBe('hidden');
+    });
+
+    it('still applies system default theme when removeItem throws', () => {
+      setupDOM({ theme: 'dark' }, false, false, true);
+      document.getElementById('themeResetBtn').click();
+      expect(document.documentElement.getAttribute('data-theme')).not.toBe('dark');
+      expect(window.localStorage.removeItem).toHaveBeenCalledWith('theme');
+    });
   });
 
   describe('SCRUM-19: Global keyboard shortcut for theme switching', () => {
@@ -153,19 +287,114 @@ describe('Code Merlin Landing Page', () => {
 
     it('should not toggle theme when typing T in nameInput without modifiers', () => {
       const nameInput = document.getElementById('nameInput');
-      const docEl = document.documentElement;
+      expect(document.activeElement).toBe(nameInput);
+    });
 
-      nameInput.focus();
-      nameInput.value = 'T';
-      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', {
+    it('should toggle theme when pressing T with focus outside text-entry elements', () => {
+      const docEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const nameInput = document.getElementById('nameInput');
+
+      nameInput.blur();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
         key: 'T',
-        ctrlKey: false,
-        shiftKey: false,
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+      expect(themeToggle.getAttribute('aria-label')).toBe('Prebaci na svetlu temu');
+    });
+
+    it('should not toggle theme when pressing T while Alt is held', () => {
+      const docEl = document.documentElement;
+      const nameInput = document.getElementById('nameInput');
+
+      nameInput.blur();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 'T',
+        altKey: true,
         bubbles: true
       }));
 
       expect(docEl.getAttribute('data-theme')).not.toBe('dark');
-      expect(nameInput.value).toBe('T');
+    });
+
+    it('should not toggle theme when pressing t inside a textarea', () => {
+      const docEl = document.documentElement;
+      const textarea = document.createElement('textarea');
+      textarea.id = 'testNotes';
+      document.body.appendChild(textarea);
+      textarea.focus();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 't',
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).not.toBe('dark');
+    });
+
+    it('should toggle theme when pressing t while focus is on a checkbox', () => {
+      const docEl = document.documentElement;
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      document.body.appendChild(checkbox);
+      checkbox.focus();
+
+      document.dispatchEvent(new window.KeyboardEvent('keydown', {
+        key: 't',
+        bubbles: true
+      }));
+
+      expect(docEl.getAttribute('data-theme')).toBe('dark');
+    });
+  });
+
+  describe('SCRUM-25: Storage message dismiss persistence', () => {
+    it('hides storage message on dismiss and sets storageMessageDismissed in localStorage', () => {
+      setupDOM();
+      const storageMessage = document.getElementById('storageMessage');
+      const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+
+      storageMessage.classList.remove('hidden');
+      dismissBtn.click();
+
+      expect(storageMessage.classList.contains('hidden')).toBe(true);
+      expect(localStorageStore.storageMessageDismissed).toBe('true');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('storageMessageDismissed', 'true');
+    });
+
+    it('keeps storage message hidden on load when storageMessageDismissed is already set', () => {
+      setupDOM({ storageMessageDismissed: 'true' });
+      const storageMessage = document.getElementById('storageMessage');
+      expect(storageMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('stays hidden after reload when user dismissed and theme save still fails', () => {
+      setupDOM();
+      const storageMessage = document.getElementById('storageMessage');
+      const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+      storageMessage.classList.remove('hidden');
+      dismissBtn.click();
+      expect(localStorageStore.storageMessageDismissed).toBe('true');
+
+      setupDOM(localStorageStore, false, true);
+      const reloaded = document.getElementById('storageMessage');
+      document.getElementById('themeToggle').click();
+      expect(reloaded.classList.contains('hidden')).toBe(true);
+    });
+
+    it('shows storage message again after dismiss flag is cleared when theme cannot be saved', () => {
+      const store = { storageMessageDismissed: 'true' };
+      setupDOM(store, false, true);
+      delete store.storageMessageDismissed;
+      setupDOM(store, false, true);
+
+      document.getElementById('themeToggle').click();
+      const storageMessage = document.getElementById('storageMessage');
+      expect(storageMessage.classList.contains('hidden')).toBe(false);
     });
   });
 
@@ -244,6 +473,44 @@ describe('Code Merlin Landing Page', () => {
       const greeting = document.getElementById('greeting');
       expect(greeting.textContent).toBe('Dobrodošli, Marko!');
       expect(greeting.classList.contains('greeting-fade-in')).toBe(false);
+    });
+  });
+
+  describe('SCRUM-29: basic empty-state message', () => {
+    it('should show empty state and hide greeting when there is no saved name', () => {
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      expect(emptyState.classList.contains('hidden')).toBe(false);
+      expect(emptyState.textContent).toContain('No data yet');
+      expect(emptyState.textContent).toContain('Save your name');
+      expect(greeting.classList.contains('hidden')).toBe(true);
+      expect(greeting.textContent).toBe('');
+    });
+
+    it('should hide empty state and show greeting when a name is saved', () => {
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(emptyState.classList.contains('hidden')).toBe(true);
+      expect(greeting.classList.contains('hidden')).toBe(false);
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+    });
+
+    it('should hide empty state on load when userName exists in localStorage', () => {
+      setupDOM({ userName: 'Luka' });
+      const emptyState = document.getElementById('contentEmptyState');
+      const greeting = document.getElementById('greeting');
+
+      expect(emptyState.classList.contains('hidden')).toBe(true);
+      expect(greeting.classList.contains('hidden')).toBe(false);
+      expect(greeting.textContent).toBe('Dobrodošli, Luka!');
     });
   });
 
