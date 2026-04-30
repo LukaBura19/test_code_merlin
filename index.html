@@ -108,6 +108,19 @@
             gap: 16px;
         }
 
+        .theme-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-reset-btn {
+            font-size: 14px;
+            padding: 8px 14px;
+        }
+
         .storage-message {
             display: flex;
             align-items: center;
@@ -120,8 +133,41 @@
             max-width: 400px;
         }
 
+        .hidden {
+            display: none;
+        }
+
         .storage-message.hidden {
             display: none;
+        }
+
+        .content-area {
+            width: 100%;
+            max-width: 400px;
+            min-height: 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .content-empty-state {
+            text-align: center;
+            padding: 8px 12px;
+        }
+
+        .content-empty-state__title {
+            margin: 0 0 6px;
+            font-size: 15px;
+            font-weight: normal;
+            opacity: 0.85;
+        }
+
+        .content-empty-state__hint {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.6;
         }
 
         .storage-message .dismiss-btn {
@@ -155,45 +201,13 @@
             color: #d9534f;
         }
 
-        .name-error {
-            color: #d9534f;
-            font-size: 12px;
-            margin-top: 4px;
-            min-height: 18px;
+        @keyframes greetingFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .save-success-message {
-            font-size: 14px;
-            color: #28a745;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-
-        .save-success-message.hidden {
-            display: none;
-        }
-
-        .banner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 12px 16px;
-            background: var(--btn-bg);
-            border-bottom: 1px solid var(--btn-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .banner.hidden {
-            display: none;
-        }
-
-        .banner-close-btn {
-            padding: 4px 10px;
-            min-width: auto;
+        #greeting.greeting-fade-in {
+            animation: greetingFadeIn 0.3s ease forwards;
         }
     </style>
 
@@ -223,7 +237,13 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <button id="themeToggle"></button>
+        <!-- SCRUM-27: theme reset clears saved preference and follows system default (see work item for AC). -->
+        <div class="theme-controls" role="group" aria-label="Kontrole teme">
+            <button id="themeToggle" type="button"></button>
+            <button id="themeResetBtn" type="button" class="theme-reset-btn"
+                aria-label="Vrati podrazumevanu temu"
+                title="Vrati podrazumevanu temu (prati sistemsko podešavanje)">Vrati temu</button>
+        </div>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
@@ -237,15 +257,64 @@
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
             <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
-        <p id="greeting" aria-live="polite"></p>
+        <div id="contentArea" class="content-area">
+            <div id="contentEmptyState" class="content-empty-state" role="status">
+                <p class="content-empty-state__title">No data yet</p>
+                <p class="content-empty-state__hint">Save your name to see a greeting.</p>
+            </div>
+            <p id="greeting" class="hidden" aria-live="polite"></p>
+        </div>
     </div>
 
     <script>
         const button = document.getElementById('themeToggle');
+        const themeResetBtn = document.getElementById('themeResetBtn');
         const storageMessage = document.getElementById('storageMessage');
         const dismissBtn = storageMessage.querySelector('.dismiss-btn');
+        const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
+
+        const storageMessageEl = byId('storageMessage');
+        const refs = {
+            docEl,
+            themeToggle: byId('themeToggle'),
+            storageMessage: storageMessageEl,
+            dismissBtn: storageMessageEl.querySelector('.dismiss-btn'),
+            nameInput: byId('nameInput'),
+            nameCounter: byId('nameCounter'),
+            nameError: byId('nameError'),
+            saveBtn: byId('saveBtn'),
+            saveSuccessMessage: byId('saveSuccessMessage'),
+            greeting: byId('greeting'),
+            contentEmptyState: byId('contentEmptyState'),
+            banner: byId('banner'),
+            bannerCloseBtn: byId('bannerCloseBtn'),
+        };
+
+        const {
+            themeToggle,
+            storageMessage,
+            dismissBtn,
+            nameInput,
+            nameCounter,
+            nameError,
+            saveBtn,
+            saveSuccessMessage,
+            greeting,
+            contentEmptyState,
+            banner,
+            bannerCloseBtn,
+        } = refs;
 
         const storage = {
+            get: (key) => {
+                try {
+                    const v = localStorage.getItem(key);
+                    return v ?? null;
+                } catch (e) {
+                    console.warn("Could not read from localStorage", key, e);
+                    return null;
+                }
+            },
             set: (key, value) => {
                 try {
                     localStorage.setItem(key, value);
@@ -254,10 +323,25 @@
                     console.warn("Could not save theme to localStorage", e);
                     return false;
                 }
+            },
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.warn("Could not remove from localStorage", key, e);
+                    return false;
+                }
             }
         };
 
+        const isStorageMessageDismissed = () => storage.get(STORAGE_MESSAGE_DISMISSED_KEY) === 'true';
+
         const showStorageMessage = () => {
+            if (isStorageMessageDismissed()) {
+                hideStorageMessage();
+                return;
+            }
             storageMessage.classList.remove('hidden');
         };
 
@@ -265,18 +349,14 @@
             storageMessage.classList.add('hidden');
         };
 
-        dismissBtn.addEventListener('click', hideStorageMessage);
+        dismissBtn.addEventListener('click', () => {
+            hideStorageMessage();
+            storage.set(STORAGE_MESSAGE_DISMISSED_KEY, 'true');
+        });
 
-        const nameInput = document.getElementById('nameInput');
-        const nameCounter = document.getElementById('nameCounter');
-        const nameError = document.getElementById('nameError');
-        const saveBtn = document.getElementById('saveBtn');
-        const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-        const greeting = document.getElementById('greeting');
         let successMessageTimeout = null;
-        const banner = document.getElementById('banner');
-        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
         const NAME_MAX_LENGTH = 20;
+        const GREETING_USE_SAVE_ANIMATION = true;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
 
@@ -312,9 +392,24 @@
             updateSaveButtonState();
         };
 
-        const displayGreeting = (name) => {
+        const displayGreeting = (name, animate = false) => {
             if (!greeting) return;
-            greeting.textContent = name ? `Dobrodošli, ${name}!` : '';
+            const trimmed = name ? String(name).trim() : '';
+            const hasContent = Boolean(trimmed);
+            greeting.textContent = hasContent ? `Dobrodošli, ${trimmed}!` : '';
+            if (hasContent) {
+                greeting.classList.remove('hidden');
+                if (contentEmptyState) contentEmptyState.classList.add('hidden');
+            } else {
+                greeting.classList.add('hidden');
+                if (contentEmptyState) contentEmptyState.classList.remove('hidden');
+            }
+            if (animate && hasContent) {
+                greeting.classList.remove('greeting-fade-in');
+                void greeting.offsetWidth; /* force reflow to retrigger animation */
+                greeting.classList.add('greeting-fade-in');
+                greeting.addEventListener('animationend', () => greeting.classList.remove('greeting-fade-in'), { once: true });
+            }
         };
 
         const hideSaveSuccessMessage = () => {
@@ -357,7 +452,7 @@
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name);
+            displayGreeting(name, GREETING_USE_SAVE_ANIMATION);
             showSaveSuccessMessage();
         };
 
@@ -375,13 +470,23 @@
 
         updateNameCounter();
         const savedName = localStorage.getItem('userName');
-        if (savedName) {
-            displayGreeting(savedName);
-        }
+        displayGreeting(savedName || '', false);
         updateSaveButtonState();
 
         if (localStorage.getItem('bannerDismissed') === 'true' && banner) {
             banner.classList.add('hidden');
+        }
+        if (isStorageMessageDismissed()) {
+            hideStorageMessage();
+        }
+        if (bannerCloseBtn) {
+            bannerCloseBtn.addEventListener('click', closeBanner);
+            bannerCloseBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    closeBanner();
+                }
+            });
         }
 
         const getThemeToggleLabel = (theme) =>
@@ -397,22 +502,43 @@
         const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
         updateThemeToggle(initialTheme);
 
-        button.addEventListener('click', () => {
+        const initialTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        setTheme(initialTheme, false);
+
+        const resetTheme = () => {
+            storage.remove('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(systemPrefersDark ? 'dark' : 'light', false);
+        };
+
+        const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
+            setTheme(newTheme, true);
+        };
 
-            if (newTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
+        button.addEventListener('click', toggleTheme);
+        themeResetBtn.addEventListener('click', resetTheme);
+        themeResetBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                resetTheme();
             }
+        });
 
             updateThemeToggle(newTheme);
 
-            const saved = storage.set('theme', newTheme);
-            if (!saved) {
-                showStorageMessage();
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+                e.preventDefault();
+                toggleTheme();
+                return;
             }
+            if (e.key.toLowerCase() !== 't') return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (isTypingInTextEntry()) return;
+            e.preventDefault();
+            toggleTheme();
         });
 
         if (nameInput) {
@@ -429,16 +555,8 @@
         }
 
         if (saveBtn) {
-            saveBtn.addEventListener('click', performSave);
-        }
-
-        if (bannerCloseBtn) {
-            bannerCloseBtn.addEventListener('click', closeBanner);
-            bannerCloseBtn.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    closeBanner();
-                }
+            saveBtn.addEventListener('click', () => {
+                performSave();
             });
         }
 
