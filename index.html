@@ -39,6 +39,40 @@
             transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
             background-color: var(--bg-color);
             color: var(--text-color);
+            position: relative;
+        }
+
+        /* SCRUM-37: skip link — off-screen until focused */
+        .skip-to-main {
+            position: fixed;
+            top: -100vh;
+            left: 8px;
+            z-index: 10001;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            border: 2px solid var(--focus-ring-color);
+            border-radius: 5px;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .skip-to-main:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .skip-to-main:focus,
+        .skip-to-main:focus-visible {
+            top: 8px;
+            outline: var(--focus-ring-width) solid var(--focus-ring-color);
+            outline-offset: var(--focus-ring-offset);
+        }
+
+        #main:focus {
+            outline: var(--focus-ring-width) solid var(--focus-ring-color);
+            outline-offset: var(--focus-ring-offset);
         }
 
         button {
@@ -229,11 +263,14 @@
 </head>
 <body>
 
+    <a href="#main" class="skip-to-main">Preskoči na glavni sadržaj</a>
+
     <div id="banner" class="banner" role="banner">
         <span>Dobrodošli! Koristite aplikaciju slobodno.</span>
         <button id="bannerCloseBtn" type="button" class="banner-close-btn" aria-label="Zatvori banner">×</button>
     </div>
 
+    <main id="main" tabindex="-1">
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
@@ -265,6 +302,7 @@
             <p id="greeting" class="hidden" aria-live="polite"></p>
         </div>
     </div>
+    </main>
 
     <script>
         const button = document.getElementById('themeToggle');
