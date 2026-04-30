@@ -12,6 +12,8 @@ describe('SCRUM-28: :focus-visible styles', () => {
     expect(html).toContain('button:focus-visible');
     expect(html).toContain('#nameInput:focus-visible');
     expect(html).toContain('button:focus:not(:focus-visible)');
+    expect(html).toContain('COD-1');
+    expect(html).toContain('#bannerCloseBtn:focus-visible');
   });
 });
 
