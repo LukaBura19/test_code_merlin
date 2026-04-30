@@ -405,6 +405,18 @@ describe('Code Merlin Landing Page', () => {
     });
   });
 
+  describe('SCRUM-35: Theme shortcut discoverability', () => {
+    it('should show Ctrl+Shift+T hint and expose aria-keyshortcuts on theme toggle', () => {
+      const hint = document.getElementById('themeShortcutHint');
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(hint).toBeTruthy();
+      expect(hint.textContent).toMatch(/Ctrl/);
+      expect(hint.textContent).toMatch(/Shift/);
+      expect(themeToggle.getAttribute('aria-keyshortcuts')).toBe('Control+Shift+T');
+    });
+  });
+
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
     expect(nameCounter.textContent).toBe('0/20 characters');
