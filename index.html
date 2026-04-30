@@ -82,6 +82,18 @@
             outline: none;
         }
 
+        /* SCRUM-34: theme toggle — high-contrast keyboard focus (inherits --focus-ring-* per data-theme) */
+        #themeToggle:focus:not(:focus-visible) {
+            outline: none;
+            box-shadow: none;
+        }
+
+        #themeToggle:focus-visible {
+            outline: 3px solid var(--focus-ring-color);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 5px var(--focus-ring-color);
+        }
+
         #nameInput:focus:not(:focus-visible) {
             outline: none;
         }

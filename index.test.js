@@ -15,6 +15,20 @@ describe('SCRUM-28: :focus-visible styles', () => {
   });
 });
 
+describe('SCRUM-34: theme toggle keyboard focus', () => {
+  it('should define #themeToggle :focus-visible styles using theme focus and background variables', () => {
+    expect(html).toContain('#themeToggle:focus-visible');
+    expect(html).toContain('#themeToggle:focus:not(:focus-visible)');
+    const block = html.slice(html.indexOf('#themeToggle:focus-visible'));
+    expect(block).toContain('var(--focus-ring-color)');
+    expect(block).toContain('var(--bg-color)');
+  });
+
+  it('should expose theme toggle as a focusable control with type button', () => {
+    expect(html).toMatch(/<button[^>]*id="themeToggle"[^>]*type="button"/);
+  });
+});
+
 describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
