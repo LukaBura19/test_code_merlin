@@ -30,13 +30,26 @@ describe('README: automation scope hints', () => {
     expect(readme).toContain('Scope for PR review');
     expect(readme).toContain('inventory concurrency');
     expect(readme).toContain('README: basara test checkpoints');
+    expect(readme.toLowerCase()).not.toContain('blablabla');
+    expect(readme.toLowerCase()).not.toContain('testtttttt');
+  });
+
+  it('lists commerce AC 4–8 as out-of-scope in docs', () => {
+    const docPath = path.resolve(__dirname, './docs/COMMERCE_AC_OUT_OF_SCOPE.md');
+    expect(fs.existsSync(docPath)).toBe(true);
+    const doc = fs.readFileSync(docPath, 'utf8');
+    expect(doc).toContain('AC 4');
+    expect(doc).toContain('NOT APPLICABLE');
+    expect(doc).toContain('AC 8');
   });
 });
 
 describe('COD-7: localized counter copy source', () => {
-  it('should centralize counter suffix in UI_COPY.nameCounterSuffix', () => {
+  it('should centralize counter suffix and primary labels in UI_COPY', () => {
     expect(html).toContain('UI_COPY');
     expect(html).toContain('nameCounterSuffix');
+    expect(html).toContain('saveButton');
+    expect(html).toContain('pageHeading');
   });
 });
 
@@ -513,6 +526,18 @@ describe('Code Merlin Landing Page', () => {
     expect(nameCounter.classList.contains('warning')).toBe(true);
   });
 
+  describe('Input constraints and empty greeting', () => {
+    it('should set maxlength=20 on name input', () => {
+      expect(document.getElementById('nameInput').getAttribute('maxlength')).toBe('20');
+    });
+
+    it('should keep greeting empty and hidden when no name is stored', () => {
+      const greeting = document.getElementById('greeting');
+      expect(greeting.textContent).toBe('');
+      expect(greeting.classList.contains('hidden')).toBe(true);
+    });
+  });
+
   describe('SCRUM-21: Greeting fade-in animation', () => {
     it('should apply greeting-fade-in class after saving a name', () => {
       const saveBtn = document.getElementById('saveBtn');
@@ -591,8 +616,8 @@ describe('Code Merlin Landing Page', () => {
       const greeting = document.getElementById('greeting');
 
       expect(emptyState.classList.contains('hidden')).toBe(false);
-      expect(emptyState.textContent).toContain('No data yet');
-      expect(emptyState.textContent).toContain('Save your name');
+      expect(emptyState.textContent).toContain('Još nema podataka');
+      expect(emptyState.textContent).toContain('Sačuvajte ime');
       expect(greeting.classList.contains('hidden')).toBe(true);
       expect(greeting.textContent).toBe('');
     });
