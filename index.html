@@ -319,13 +319,13 @@
     <a href="#main" class="skip-to-main">Preskoči na glavni sadržaj</a>
 
     <div id="banner" class="banner" role="banner">
-        <span>Dobrodošli! Koristite aplikaciju slobodno.</span>
+        <span id="bannerWelcome">Dobrodošli! Koristite aplikaciju slobodno.</span>
         <button id="bannerCloseBtn" type="button" class="banner-close-btn" aria-label="Zatvori banner">×</button>
     </div>
 
     <main id="main" tabindex="-1">
     <div class="container">
-        <h1>Dobrodošli na Code Merlin aplikaciju</h1>
+        <h1 id="pageHeading">Dobrodošli na Code Merlin aplikaciju</h1>
         
         <!-- SCRUM-27: theme reset clears saved preference and follows system default (see work item for AC). -->
         <div class="theme-controls" role="group" aria-label="Kontrole teme">
@@ -339,21 +339,21 @@
         </p>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
-            <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
+            <span id="storageMessageText">Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
             <button type="button" class="dismiss-btn" aria-label="Zatvori">×</button>
         </div>
         <div class="form-group">
-            <label for="nameInput">Ime</label>
+            <label id="nameLabel" for="nameInput">Ime</label>
             <input id="nameInput" type="text" maxlength="20" />
             <span id="nameError" class="name-error" aria-live="polite"></span>
-            <span id="nameCounter" class="char-counter">0/20 characters</span>
+            <span id="nameCounter" class="char-counter">0/20 karaktera</span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
             <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
         <div id="contentArea" class="content-area">
             <div id="contentEmptyState" class="content-empty-state" role="status">
-                <p class="content-empty-state__title">No data yet</p>
-                <p class="content-empty-state__hint">Save your name to see a greeting.</p>
+                <p id="emptyStateTitle" class="content-empty-state__title">Još nema podataka</p>
+                <p id="emptyStateHint" class="content-empty-state__hint">Sačuvajte ime da biste videli pozdrav.</p>
             </div>
             <p id="greeting" class="hidden" aria-live="polite"></p>
         </div>
@@ -428,7 +428,74 @@
 
         let successMessageTimeout = null;
         const NAME_MAX_LENGTH = 20;
+
+        /** Central user-visible strings (SR); defaults also mirrored in static HTML for no-JS/first-paint safety. */
+        const UI_COPY = {
+            skipToMain: 'Preskoči na glavni sadržaj',
+            bannerWelcome: 'Dobrodošli! Koristite aplikaciju slobodno.',
+            bannerCloseAria: 'Zatvori banner',
+            pageHeading: 'Dobrodošli na Code Merlin aplikaciju',
+            themeGroupAria: 'Kontrole teme',
+            themeShortcutHtmlPrefix: 'Prečica:',
+            themeResetLabel: 'Vrati temu',
+            themeResetAria: 'Vrati podrazumevanu temu',
+            themeResetTitle: 'Vrati podrazumevanu temu (prati sistemsko podešavanje)',
+            themeToggleToDark: 'Prebaci na tamnu temu',
+            themeToggleToLight: 'Prebaci na svetlu temu',
+            storageMessage: 'Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.',
+            dismissStorageAria: 'Zatvori',
+            nameLabel: 'Ime',
+            nameCounterSuffix: 'karaktera',
+            saveButton: 'Sačuvaj',
+            emptyStateTitle: 'Još nema podataka',
+            emptyStateHint: 'Sačuvajte ime da biste videli pozdrav.',
+            greetingHello: (name) => `Dobrodošli, ${name}!`,
+            saveSuccess: 'Ime je uspešno sačuvano.',
+            errEmptyName: 'Ime ne može biti prazno.',
+            errNameLength: 'Ime mora imati 1–20 karaktera.',
+        };
+
         const GREETING_USE_SAVE_ANIMATION = true;
+
+        const applyStaticUiLabels = () => {
+            const skip = document.querySelector('.skip-to-main');
+            if (skip) skip.textContent = UI_COPY.skipToMain;
+
+            const bannerWelcomeEl = document.getElementById('bannerWelcome');
+            if (bannerWelcomeEl) bannerWelcomeEl.textContent = UI_COPY.bannerWelcome;
+            if (bannerCloseBtn) bannerCloseBtn.setAttribute('aria-label', UI_COPY.bannerCloseAria);
+
+            const pageHeadingEl = document.getElementById('pageHeading');
+            if (pageHeadingEl) pageHeadingEl.textContent = UI_COPY.pageHeading;
+
+            const themeGroupEl = document.querySelector('.theme-controls');
+            if (themeGroupEl) themeGroupEl.setAttribute('aria-label', UI_COPY.themeGroupAria);
+
+            if (themeResetBtn) {
+                themeResetBtn.textContent = UI_COPY.themeResetLabel;
+                themeResetBtn.setAttribute('aria-label', UI_COPY.themeResetAria);
+                themeResetBtn.setAttribute('title', UI_COPY.themeResetTitle);
+            }
+
+            const shortcutHint = document.getElementById('themeShortcutHint');
+            if (shortcutHint) {
+                shortcutHint.innerHTML =
+                    `${UI_COPY.themeShortcutHtmlPrefix} <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>`;
+            }
+
+            const storageTextEl = document.getElementById('storageMessageText');
+            if (storageTextEl) storageTextEl.textContent = UI_COPY.storageMessage;
+            if (dismissBtn) dismissBtn.setAttribute('aria-label', UI_COPY.dismissStorageAria);
+
+            const nameLabelEl = document.getElementById('nameLabel');
+            if (nameLabelEl) nameLabelEl.textContent = UI_COPY.nameLabel;
+            if (saveBtn) saveBtn.textContent = UI_COPY.saveButton;
+
+            const emptyTitleEl = document.getElementById('emptyStateTitle');
+            const emptyHintEl = document.getElementById('emptyStateHint');
+            if (emptyTitleEl) emptyTitleEl.textContent = UI_COPY.emptyStateTitle;
+            if (emptyHintEl) emptyHintEl.textContent = UI_COPY.emptyStateHint;
+        };
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
 
@@ -454,7 +521,7 @@
             if (!nameInput || !nameCounter) return;
 
             const length = nameInput.value.length;
-            nameCounter.textContent = `${length}/${NAME_MAX_LENGTH} characters`;
+            nameCounter.textContent = `${length}/${NAME_MAX_LENGTH} ${UI_COPY.nameCounterSuffix}`;
 
             if (length >= 18 && length <= NAME_MAX_LENGTH) {
                 nameCounter.classList.add('warning');
@@ -464,11 +531,16 @@
             updateSaveButtonState();
         };
 
+        const bootstrapUi = () => {
+            applyStaticUiLabels();
+            updateNameCounter();
+        };
+
         const displayGreeting = (name, animate = false) => {
             if (!greeting) return;
             const trimmed = name ? String(name).trim() : '';
             const hasContent = Boolean(trimmed);
-            greeting.textContent = hasContent ? `Dobrodošli, ${trimmed}!` : '';
+            greeting.textContent = hasContent ? UI_COPY.greetingHello(trimmed) : '';
             if (hasContent) {
                 greeting.classList.remove('hidden');
                 if (contentEmptyState) contentEmptyState.classList.add('hidden');
@@ -506,7 +578,7 @@
         const showSaveSuccessMessage = () => {
             hideSaveSuccessMessage();
             if (!saveSuccessMessage) return;
-            saveSuccessMessage.textContent = 'Ime je uspešno sačuvano.';
+            saveSuccessMessage.textContent = UI_COPY.saveSuccess;
             saveSuccessMessage.classList.remove('hidden');
             successMessageTimeout = setTimeout(hideSaveSuccessMessage, 4000);
         };
@@ -521,18 +593,18 @@
             const raw = nameInput?.value?.trim() || '';
             const name = formatName(raw);
             if (!name) {
-                showNameError('Ime ne može biti prazno.');
+                showNameError(UI_COPY.errEmptyName);
                 return;
             }
             if (!isValidNameLength(name.length)) {
-                showNameError('Ime mora imati 1–20 karaktera.');
+                showNameError(UI_COPY.errNameLength);
                 return;
             }
             clearNameError();
             localStorage.setItem('userName', name);
             if (nameInput) nameInput.value = name;
             updateNameCounter();
-            displayGreeting(name, true);
+            displayGreeting(name, GREETING_USE_SAVE_ANIMATION);
             showSaveSuccessMessage();
         };
 
@@ -548,7 +620,7 @@
             try { localStorage.setItem('bannerDismissed', 'true'); } catch (e) {}
         };
 
-        updateNameCounter();
+        bootstrapUi();
         const savedName = localStorage.getItem('userName');
         displayGreeting(savedName || '', false);
         updateSaveButtonState();
@@ -570,7 +642,7 @@
         }
 
         const getThemeToggleLabel = (theme) =>
-            theme === 'dark' ? 'Prebaci na svetlu temu' : 'Prebaci na tamnu temu';
+            theme === 'dark' ? UI_COPY.themeToggleToLight : UI_COPY.themeToggleToDark;
 
         const updateThemeToggle = (theme) => {
             const label = getThemeToggleLabel(theme);
@@ -588,6 +660,10 @@
             }
         };
 
+        /**
+         * Applies theme to `<html>` and syncs toggle labels.
+         * @param {boolean} persist When true, calls storage.set('theme', theme); shows storage banner if save fails.
+         */
         const setTheme = (theme, persist) => {
             applyDocumentTheme(theme);
             updateThemeToggle(theme);
@@ -608,22 +684,11 @@
             setTheme(systemPrefersDark ? 'dark' : 'light', false);
         };
 
+        /** Delegates to setTheme(..., true) so persistence always routes through storage.set. */
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
-
-            if (newTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-            }
-
-            updateThemeToggleButton(newTheme);
-
-            const saved = storage.set('theme', newTheme);
-            if (!saved) {
-                showStorageMessage();
-            }
+            setTheme(newTheme, true);
         };
 
         const isTypingInTextEntry = () => {
@@ -684,6 +749,8 @@
         if (nameInput) {
             nameInput.focus();
         }
+
+        document.addEventListener('DOMContentLoaded', bootstrapUi);
     </script>
 
 </body>

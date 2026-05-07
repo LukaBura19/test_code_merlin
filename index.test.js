@@ -24,6 +24,35 @@ describe('SCRUM-34: theme toggle keyboard focus', () => {
   });
 });
 
+describe('README: automation scope hints', () => {
+  it('documents reviewer scope for AI tooling (no phantom commerce/back-office ACs)', () => {
+    const readme = fs.readFileSync(path.resolve(__dirname, './README.md'), 'utf8');
+    expect(readme).toContain('Scope for PR review');
+    expect(readme).toContain('inventory concurrency');
+    expect(readme).toContain('README: basara test checkpoints');
+    expect(readme.toLowerCase()).not.toContain('blablabla');
+    expect(readme.toLowerCase()).not.toContain('testtttttt');
+  });
+
+  it('lists commerce AC 4–8 as out-of-scope in docs', () => {
+    const docPath = path.resolve(__dirname, './docs/COMMERCE_AC_OUT_OF_SCOPE.md');
+    expect(fs.existsSync(docPath)).toBe(true);
+    const doc = fs.readFileSync(docPath, 'utf8');
+    expect(doc).toContain('AC 4');
+    expect(doc).toContain('NOT APPLICABLE');
+    expect(doc).toContain('AC 8');
+  });
+});
+
+describe('COD-7: localized counter copy source', () => {
+  it('should centralize counter suffix and primary labels in UI_COPY', () => {
+    expect(html).toContain('UI_COPY');
+    expect(html).toContain('nameCounterSuffix');
+    expect(html).toContain('saveButton');
+    expect(html).toContain('pageHeading');
+  });
+});
+
 describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
@@ -80,6 +109,44 @@ describe('Code Merlin Landing Page', () => {
 
   it('should have the correct title', () => {
     expect(document.title).toBe('Code Merlin Aplikacija');
+  });
+
+  describe('README: basara test checkpoints', () => {
+    it('basara test1: shell renders title and main landmark', () => {
+      expect(document.title).toBe('Code Merlin Aplikacija');
+      const main = document.getElementById('main');
+      expect(main).not.toBeNull();
+      expect(main.tagName.toLowerCase()).toBe('main');
+    });
+
+    it('basara test2: theme toggle flips data-theme and persists theme key', () => {
+      document.getElementById('themeToggle').click();
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
+    });
+
+    it('basara test3: saving valid name updates greeting', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      nameInput.value = 'Luka';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(document.getElementById('greeting').textContent).toBe('Dobrodošli, Luka!');
+    });
+
+    it('basara test4: Escape clears typed name input', () => {
+      const nameInput = document.getElementById('nameInput');
+      nameInput.value = 'x';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(nameInput.value).toBe('');
+    });
+
+    it('basara test5: banner close persists bannerDismissed', () => {
+      document.getElementById('bannerCloseBtn').click();
+      expect(window.localStorage.setItem).toHaveBeenCalledWith('bannerDismissed', 'true');
+      expect(document.getElementById('banner').classList.contains('hidden')).toBe(true);
+    });
   });
 
   it('should toggle theme on button click and update aria-label, title, and visible text', () => {
@@ -425,7 +492,7 @@ describe('Code Merlin Landing Page', () => {
 
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
-    expect(nameCounter.textContent).toBe('0/20 characters');
+    expect(nameCounter.textContent).toBe('0/20 karaktera');
   });
 
   it('should update character counter as the user types', () => {
@@ -435,12 +502,20 @@ describe('Code Merlin Landing Page', () => {
     nameInput.value = 'Test';
     nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
 
-    expect(nameCounter.textContent).toBe('4/20 characters');
+    expect(nameCounter.textContent).toBe('4/20 karaktera');
   });
 
   it('should apply warning class when length is between 18 and 20', () => {
     const nameInput = document.getElementById('nameInput');
     const nameCounter = document.getElementById('nameCounter');
+
+    nameInput.value = 'a'.repeat(17);
+    nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    expect(nameCounter.classList.contains('warning')).toBe(false);
+
+    nameInput.value = 'a'.repeat(18);
+    nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    expect(nameCounter.classList.contains('warning')).toBe(true);
 
     nameInput.value = 'a'.repeat(19);
     nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -449,6 +524,18 @@ describe('Code Merlin Landing Page', () => {
     nameInput.value = 'a'.repeat(20);
     nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
     expect(nameCounter.classList.contains('warning')).toBe(true);
+  });
+
+  describe('Input constraints and empty greeting', () => {
+    it('should set maxlength=20 on name input', () => {
+      expect(document.getElementById('nameInput').getAttribute('maxlength')).toBe('20');
+    });
+
+    it('should keep greeting empty and hidden when no name is stored', () => {
+      const greeting = document.getElementById('greeting');
+      expect(greeting.textContent).toBe('');
+      expect(greeting.classList.contains('hidden')).toBe(true);
+    });
   });
 
   describe('SCRUM-21: Greeting fade-in animation', () => {
@@ -529,8 +616,8 @@ describe('Code Merlin Landing Page', () => {
       const greeting = document.getElementById('greeting');
 
       expect(emptyState.classList.contains('hidden')).toBe(false);
-      expect(emptyState.textContent).toContain('No data yet');
-      expect(emptyState.textContent).toContain('Save your name');
+      expect(emptyState.textContent).toContain('Još nema podataka');
+      expect(emptyState.textContent).toContain('Sačuvajte ime');
       expect(greeting.classList.contains('hidden')).toBe(true);
       expect(greeting.textContent).toBe('');
     });
