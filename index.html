@@ -346,7 +346,7 @@
             <label for="nameInput">Ime</label>
             <input id="nameInput" type="text" maxlength="20" />
             <span id="nameError" class="name-error" aria-live="polite"></span>
-            <span id="nameCounter" class="char-counter">0/20 karaktera</span>
+            <span id="nameCounter" class="char-counter"></span>
             <button id="saveBtn" type="button" disabled>Sačuvaj</button>
             <p id="saveSuccessMessage" class="save-success-message hidden" role="status" aria-live="polite"></p>
         </div>
@@ -428,6 +428,10 @@
 
         let successMessageTimeout = null;
         const NAME_MAX_LENGTH = 20;
+        /** UI copy grouped for localization (COD-7 follow-up). */
+        const UI_COPY = {
+            nameCounterSuffix: 'karaktera',
+        };
         const GREETING_USE_SAVE_ANIMATION = true;
 
         const isValidNameLength = (len) => len >= 1 && len <= NAME_MAX_LENGTH;
@@ -454,7 +458,7 @@
             if (!nameInput || !nameCounter) return;
 
             const length = nameInput.value.length;
-            nameCounter.textContent = `${length}/${NAME_MAX_LENGTH} karaktera`;
+            nameCounter.textContent = `${length}/${NAME_MAX_LENGTH} ${UI_COPY.nameCounterSuffix}`;
 
             if (length >= 18 && length <= NAME_MAX_LENGTH) {
                 nameCounter.classList.add('warning');
@@ -588,6 +592,10 @@
             }
         };
 
+        /**
+         * Applies theme to `<html>` and syncs toggle labels.
+         * @param {boolean} persist When true, calls storage.set('theme', theme); shows storage banner if save fails.
+         */
         const setTheme = (theme, persist) => {
             applyDocumentTheme(theme);
             updateThemeToggle(theme);
@@ -608,6 +616,7 @@
             setTheme(systemPrefersDark ? 'dark' : 'light', false);
         };
 
+        /** Delegates to setTheme(..., true) so persistence always routes through storage.set. */
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
