@@ -425,7 +425,7 @@ describe('Code Merlin Landing Page', () => {
 
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
-    expect(nameCounter.textContent).toBe('0/20 characters');
+    expect(nameCounter.textContent).toBe('0/20 karaktera');
   });
 
   it('should update character counter as the user types', () => {
@@ -435,7 +435,7 @@ describe('Code Merlin Landing Page', () => {
     nameInput.value = 'Test';
     nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
 
-    expect(nameCounter.textContent).toBe('4/20 characters');
+    expect(nameCounter.textContent).toBe('4/20 karaktera');
   });
 
   it('should apply warning class when length is between 18 and 20', () => {
