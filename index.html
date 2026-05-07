@@ -256,6 +256,13 @@
         #greeting.greeting-fade-in {
             animation: greetingFadeIn 0.3s ease forwards;
         }
+
+        /* COD-6: no greeting fade-in when user prefers reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            #greeting.greeting-fade-in {
+                animation: none;
+            }
+        }
     </style>
 
     <!-- Critical: Theme initialization in HEAD to prevent Flash of Unstyled Content (FOUC) -->
@@ -317,43 +324,21 @@
     </main>
 
     <script>
-        const button = document.getElementById('themeToggle');
+        const themeToggle = document.getElementById('themeToggle');
         const themeResetBtn = document.getElementById('themeResetBtn');
         const storageMessage = document.getElementById('storageMessage');
         const dismissBtn = storageMessage.querySelector('.dismiss-btn');
         const STORAGE_MESSAGE_DISMISSED_KEY = 'storageMessageDismissed';
 
-        const storageMessageEl = byId('storageMessage');
-        const refs = {
-            docEl,
-            themeToggle: byId('themeToggle'),
-            storageMessage: storageMessageEl,
-            dismissBtn: storageMessageEl.querySelector('.dismiss-btn'),
-            nameInput: byId('nameInput'),
-            nameCounter: byId('nameCounter'),
-            nameError: byId('nameError'),
-            saveBtn: byId('saveBtn'),
-            saveSuccessMessage: byId('saveSuccessMessage'),
-            greeting: byId('greeting'),
-            contentEmptyState: byId('contentEmptyState'),
-            banner: byId('banner'),
-            bannerCloseBtn: byId('bannerCloseBtn'),
-        };
-
-        const {
-            themeToggle,
-            storageMessage,
-            dismissBtn,
-            nameInput,
-            nameCounter,
-            nameError,
-            saveBtn,
-            saveSuccessMessage,
-            greeting,
-            contentEmptyState,
-            banner,
-            bannerCloseBtn,
-        } = refs;
+        const nameInput = document.getElementById('nameInput');
+        const nameCounter = document.getElementById('nameCounter');
+        const nameError = document.getElementById('nameError');
+        const saveBtn = document.getElementById('saveBtn');
+        const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+        const greeting = document.getElementById('greeting');
+        const contentEmptyState = document.getElementById('contentEmptyState');
+        const banner = document.getElementById('banner');
+        const bannerCloseBtn = document.getElementById('bannerCloseBtn');
 
         const storage = {
             get: (key) => {
@@ -456,9 +441,17 @@
             }
             if (animate && hasContent) {
                 greeting.classList.remove('greeting-fade-in');
-                void greeting.offsetWidth; /* force reflow to retrigger animation */
-                greeting.classList.add('greeting-fade-in');
-                greeting.addEventListener('animationend', () => greeting.classList.remove('greeting-fade-in'), { once: true });
+                let reducedMotion = false;
+                try {
+                    reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                } catch (e) {
+                    reducedMotion = false;
+                }
+                if (!reducedMotion) {
+                    void greeting.offsetWidth; /* force reflow to retrigger animation */
+                    greeting.classList.add('greeting-fade-in');
+                    greeting.addEventListener('animationend', () => greeting.classList.remove('greeting-fade-in'), { once: true });
+                }
             }
         };
 
@@ -544,13 +537,39 @@
 
         const updateThemeToggle = (theme) => {
             const label = getThemeToggleLabel(theme);
-            button.setAttribute('aria-label', label);
-            button.setAttribute('title', label);
-            button.textContent = label;
+            themeToggle.setAttribute('aria-label', label);
+            themeToggle.setAttribute('title', label);
+            themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+            themeToggle.textContent = label;
         };
 
-        const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        updateThemeToggleButton(initialTheme);
+        const applyDocumentTheme = (theme) => {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        };
+
+        const setTheme = (theme, persist) => {
+            applyDocumentTheme(theme);
+            updateThemeToggle(theme);
+            if (persist) {
+                const saved = storage.set('theme', theme);
+                if (!saved) {
+                    showStorageMessage();
+                }
+            }
+        };
+
+        const initialTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        updateThemeToggle(initialTheme);
+
+        const resetTheme = () => {
+            storage.remove('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(systemPrefersDark ? 'dark' : 'light', false);
+        };
 
         const toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -570,7 +589,21 @@
             }
         };
 
-        button.addEventListener('click', toggleTheme);
+        const isTypingInTextEntry = () => {
+            const el = document.activeElement;
+            if (!el || el === document.body) return false;
+            const tag = el.tagName;
+            if (tag === 'TEXTAREA') return true;
+            if (tag === 'SELECT') return true;
+            if (el.isContentEditable) return true;
+            if (tag === 'INPUT') {
+                const type = (el.type || 'text').toLowerCase();
+                return ['text', 'password', 'email', 'search', 'url', 'tel', 'number'].includes(type);
+            }
+            return false;
+        };
+
+        themeToggle.addEventListener('click', toggleTheme);
         themeResetBtn.addEventListener('click', resetTheme);
         themeResetBtn.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
@@ -578,8 +611,6 @@
                 resetTheme();
             }
         });
-
-            updateThemeToggle(newTheme);
 
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 't') {

@@ -28,7 +28,7 @@ describe('Code Merlin Landing Page', () => {
   let window;
   let localStorageStore = {};
 
-  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false, removeItemThrows = false) => {
+  const setupDOM = (mockLocalStorage = {}, mockSystemDark = false, setItemThrows = false, removeItemThrows = false, mockReducedMotion = false) => {
     localStorageStore = { ...mockLocalStorage };
 
     const setItemImpl = setItemThrows
@@ -54,7 +54,11 @@ describe('Code Merlin Landing Page', () => {
         });
         Object.defineProperty(win, 'matchMedia', {
           value: vi.fn((query) => ({
-            matches: query === '(prefers-color-scheme: dark)' ? mockSystemDark : false,
+            matches: query === '(prefers-color-scheme: dark)'
+              ? mockSystemDark
+              : query === '(prefers-reduced-motion: reduce)'
+                ? mockReducedMotion
+                : false,
             media: query,
             onchange: null,
             addListener: vi.fn(),
@@ -480,6 +484,40 @@ describe('Code Merlin Landing Page', () => {
       const greeting = document.getElementById('greeting');
       expect(greeting.textContent).toBe('Dobrodošli, Marko!');
       expect(greeting.classList.contains('greeting-fade-in')).toBe(false);
+    });
+  });
+
+  describe('COD-6: prefers-reduced-motion and greeting animation', () => {
+    it('should omit greeting-fade-in after save when prefers-reduced-motion is reduce', () => {
+      setupDOM({}, false, false, false, true);
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(greeting.textContent).toBe('Dobrodošli, Ana!');
+      expect(greeting.classList.contains('greeting-fade-in')).toBe(false);
+    });
+
+    it('should still apply greeting-fade-in when reduced motion is not requested', () => {
+      setupDOM({}, false, false, false, false);
+      const saveBtn = document.getElementById('saveBtn');
+      const nameInput = document.getElementById('nameInput');
+      const greeting = document.getElementById('greeting');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(greeting.classList.contains('greeting-fade-in')).toBe(true);
+    });
+
+    it('should define prefers-reduced-motion guard for greeting in index.html', () => {
+      expect(html).toContain('prefers-reduced-motion');
+      expect(html).toContain('COD-6');
     });
   });
 
