@@ -135,6 +135,20 @@
             outline-offset: var(--focus-ring-offset);
         }
 
+        /* COD-1: clearer rings on compact icon buttons (same tokens, slightly larger offset) */
+        #bannerCloseBtn:focus-visible,
+        .storage-message .dismiss-btn:focus-visible {
+            outline-offset: 3px;
+        }
+
+        /* COD-1: explicit primary-control mapping (inherits SCRUM-28 ring tokens) */
+        #themeToggle:focus-visible,
+        #themeResetBtn:focus-visible,
+        #saveBtn:focus-visible {
+            outline: var(--focus-ring-width) solid var(--focus-ring-color);
+            outline-offset: var(--focus-ring-offset);
+        }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -151,6 +165,25 @@
 
         .theme-shortcut-hint {
             margin: 0;
+            font-size: 12px;
+            line-height: 1.35;
+            opacity: 0.82;
+            text-align: center;
+            max-width: 280px;
+        }
+
+        .theme-shortcut-hint kbd {
+            font-family: inherit;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--text-color);
+        }
+
+        .theme-shortcut-hint {
+            margin: 4px 0 0;
             font-size: 12px;
             line-height: 1.35;
             opacity: 0.82;
@@ -294,12 +327,16 @@
     <div class="container">
         <h1>Dobrodošli na Code Merlin aplikaciju</h1>
         
-        <div class="theme-row">
+        <!-- SCRUM-27: theme reset clears saved preference and follows system default (see work item for AC). -->
+        <div class="theme-controls" role="group" aria-label="Kontrole teme">
             <button id="themeToggle" type="button" aria-keyshortcuts="Control+Shift+T"></button>
-            <p id="themeShortcutHint" class="theme-shortcut-hint">
-                Prečica: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>
-            </p>
+            <button id="themeResetBtn" type="button" class="theme-reset-btn"
+                aria-label="Vrati podrazumevanu temu"
+                title="Vrati podrazumevanu temu (prati sistemsko podešavanje)">Vrati temu</button>
         </div>
+        <p id="themeShortcutHint" class="theme-shortcut-hint">
+            Prečica: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd>
+        </p>
 
         <div id="storageMessage" class="storage-message hidden" role="status">
             <span>Ne možemo da sačuvamo temu na ovom uređaju, ali promena važi dok je stranica otvorena.</span>
