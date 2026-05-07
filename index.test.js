@@ -15,6 +15,13 @@ describe('SCRUM-28: :focus-visible styles', () => {
   });
 });
 
+describe('SCRUM-34: theme toggle keyboard focus', () => {
+  it('should include #themeToggle:focus-visible styles in index.html', () => {
+    expect(html).toContain('#themeToggle:focus-visible');
+    expect(html).toContain('#themeToggle:focus:not(:focus-visible)');
+  });
+});
+
 describe('Code Merlin Landing Page', () => {
   let dom;
   let document;
@@ -402,6 +409,18 @@ describe('Code Merlin Landing Page', () => {
     });
   });
 
+  describe('SCRUM-35: Theme shortcut discoverability', () => {
+    it('should show Ctrl+Shift+T hint and expose aria-keyshortcuts on theme toggle', () => {
+      const hint = document.getElementById('themeShortcutHint');
+      const themeToggle = document.getElementById('themeToggle');
+
+      expect(hint).toBeTruthy();
+      expect(hint.textContent).toMatch(/Ctrl/);
+      expect(hint.textContent).toMatch(/Shift/);
+      expect(themeToggle.getAttribute('aria-keyshortcuts')).toBe('Control+Shift+T');
+    });
+  });
+
   it('should show initial name character counter as 0/20', () => {
     const nameCounter = document.getElementById('nameCounter');
     expect(nameCounter.textContent).toBe('0/20 characters');
@@ -568,7 +587,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt (SCRUM-17)', () => {
@@ -584,7 +603,7 @@ describe('Code Merlin Landing Page', () => {
       nameInput.value = 'Marko';
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
     });
 
@@ -664,7 +683,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -674,7 +693,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -692,7 +711,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape (reset)', () => {
@@ -712,7 +731,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -722,7 +741,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -739,73 +758,8 @@ describe('Code Merlin Landing Page', () => {
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
 
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-    });
-
-    it('should hide success message when pressing Escape (reset)', () => {
-      const nameInput = document.getElementById('nameInput');
-      const saveBtn = document.getElementById('saveBtn');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-
-      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
-    });
-
-    it('should auto-hide success message after 4 seconds', () => {
-      vi.useFakeTimers();
-      const nameInput = document.getElementById('nameInput');
-      const saveBtn = document.getElementById('saveBtn');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-
-      vi.advanceTimersByTime(4000);
-
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
-      vi.useRealTimers();
-    });
-  });
-
-  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
-      const nameInput = document.getElementById('nameInput');
-      const saveBtn = document.getElementById('saveBtn');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
-    });
-
-    it('should hide success message on next save attempt', () => {
-      const nameInput = document.getElementById('nameInput');
-      const saveBtn = document.getElementById('saveBtn');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-
-      nameInput.value = 'Marko';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
     });
 
     it('should hide success message when pressing Escape (reset)', () => {
@@ -842,7 +796,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -852,7 +806,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -870,7 +824,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape (reset)', () => {
@@ -907,7 +861,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -917,7 +871,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -934,7 +888,8 @@ describe('Code Merlin Landing Page', () => {
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
 
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape (reset)', () => {
@@ -971,7 +926,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -981,7 +936,71 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
+    });
+
+    it('should hide success message on next save attempt', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.value = 'Marko';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
+    });
+
+    it('should hide success message when pressing Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+
+    it('should auto-hide success message after 4 seconds', () => {
+      vi.useFakeTimers();
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      vi.advanceTimersByTime(4000);
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -998,7 +1017,7 @@ describe('Code Merlin Landing Page', () => {
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape (reset)', () => {
@@ -1034,7 +1053,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1044,7 +1063,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -1062,7 +1081,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape', () => {
@@ -1099,7 +1118,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1109,7 +1128,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -1127,7 +1146,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape', () => {
@@ -1147,7 +1166,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1157,7 +1176,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -1175,7 +1194,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when pressing Escape', () => {
@@ -1195,7 +1214,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1204,7 +1223,7 @@ describe('Code Merlin Landing Page', () => {
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
 
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
     });
 
@@ -1222,7 +1241,7 @@ describe('Code Merlin Landing Page', () => {
       nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
       saveBtn.click();
 
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
     });
 
@@ -1253,7 +1272,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on Escape (reset)', () => {
@@ -1271,7 +1290,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after save', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1281,35 +1300,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
-    });
-
-    it('should hide success message on Escape (reset)', () => {
-      const nameInput = document.getElementById('nameInput');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      document.getElementById('saveBtn').click();
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-
-      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
-    });
-  });
-
-  describe('SCRUM-17: Confirmation message after save', () => {
-    it('should show success message after valid save', () => {
-      const nameInput = document.getElementById('nameInput');
-      const saveBtn = document.getElementById('saveBtn');
-      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
-
-      nameInput.value = 'Ana';
-      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      saveBtn.click();
-
-      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on Escape (reset)', () => {
@@ -1337,7 +1328,35 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
+    });
+
+    it('should hide success message on Escape (reset)', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      document.getElementById('saveBtn').click();
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+
+      nameInput.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  describe('SCRUM-17: Confirmation message after save', () => {
+    it('should show success message after valid save', () => {
+      const nameInput = document.getElementById('nameInput');
+      const saveBtn = document.getElementById('saveBtn');
+      const saveSuccessMessage = document.getElementById('saveSuccessMessage');
+
+      nameInput.value = 'Ana';
+      nameInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      saveBtn.click();
+
+      expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on Escape (reset)', () => {
@@ -1428,7 +1447,7 @@ describe('Code Merlin Landing Page', () => {
   });
 
   describe('SCRUM-17: Confirmation message after successfully saving the name', () => {
-    it('should show "Name has been saved successfully." after valid save', () => {
+    it('should show "Ime je uspešno sačuvano." after valid save', () => {
       const nameInput = document.getElementById('nameInput');
       const saveBtn = document.getElementById('saveBtn');
       const saveSuccessMessage = document.getElementById('saveSuccessMessage');
@@ -1438,7 +1457,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message on next save attempt', () => {
@@ -1456,7 +1475,7 @@ describe('Code Merlin Landing Page', () => {
       saveBtn.click();
 
       expect(saveSuccessMessage.classList.contains('hidden')).toBe(false);
-      expect(saveSuccessMessage.textContent).toBe('Name has been saved successfully.');
+      expect(saveSuccessMessage.textContent).toBe('Ime je uspešno sačuvano.');
     });
 
     it('should hide success message when Escape clears input', () => {
